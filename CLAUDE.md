@@ -354,6 +354,76 @@ refactor(systems): all cross-system calls moved to EventBus
 
 ---
 
+## AUTONOMOUS OPERATION — PERMANENT RULES
+
+### Never Stop For
+- File overwrite confirmations
+- Install confirmations
+- Script execution confirmations
+- Yes/no/always prompts
+- Permission requests
+- Any confirmation of any kind
+
+### When Blocked
+- Write issue to `docs/blocked.md` with timestamp
+- Write attempted solution to `docs/blocked.md`
+- Try 2 alternative approaches automatically
+- Continue with everything else
+- NEVER stop and wait
+
+### When A Command Fails
+- Log failure to `docs/blocked.md`
+- Try 3 alternative approaches
+- Continue with next task
+- NEVER stop and wait
+
+### Session Behavior
+- Start every session: read CLAUDE.md + scan codebase
+- End every session: run obsidian sync + git commit + session log
+- Mid session: commit after every completed system
+- Overnight: work through full build queue until empty
+
+### Obsidian Sync Rules
+- Vault: `C:\Users\nawfi\OneDrive\Documents\My remote vault`
+- Sync after every completed system
+- Sync after every CLAUDE.md update
+- Sync after every commit
+- Sync at session end always
+- Only `.md` files — never code or assets
+- Snapshots: keep last 5 only
+
+### Git Rules
+- Commit after every system: feat/fix/perf convention
+- Never commit broken code (tsc --noEmit must pass)
+- Push after every 3 commits if remote is configured
+
+---
+
+## AUTO SCRIPTS — RUN THESE AUTOMATICALLY
+
+| Trigger | Script |
+|---------|--------|
+| Session start | `scripts\session-start.ps1` |
+| Session end | `scripts\session-end.ps1` |
+| After any system | `scripts\obsidian-sync.bat` |
+| Before sleep | `scripts\overnight.ps1` (via Desktop shortcut) |
+| On wake | `scripts\wake-up-report.ps1` (via Desktop shortcut) |
+
+## What Nawfi Has To Do
+- Before sleep: double-click **SLEEP - Claude Overnight** (Desktop)
+- On wake: double-click **WAKE - Morning Report** (Desktop)
+- Everything else: Claude Code handles automatically
+
+## What Nawfi Never Has To Do
+- Confirm anything
+- Approve anything
+- Run any sync manually
+- Commit manually
+- Update Obsidian manually
+- Check logs manually (morning report does it)
+
+---
+
 ## OBSIDIAN VAULT RULES
 
 Vault path: `C:\Users\nawfi\OneDrive\Documents\My remote vault\Game\`
