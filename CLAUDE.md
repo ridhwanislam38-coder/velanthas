@@ -198,14 +198,14 @@ Build one item at a time. Benchmarks + feel test before moving to next.
 
 [DONE] 01. LightingSystem — integrated into TownScene (shadow casters, SURFACE darkness, player pos sync)
 [DONE] 02. SkySystem — wired to TownScene, ASHFIELDS region on start
-[    ] 03. SkySystem — Verdenmere/Greyveil/Gildspire/Voidmarsh/Unnamed City playtest
+[DONE] 03. SkySystem — Verdenmere/Greyveil/Gildspire/Voidmarsh/Unnamed City playtest
 [DONE] 06. SightSystem — wired to GuardEnemy (CONE_SIGHT 100°, yellow→red escalation)
 [DONE] 07. SpecialAttack — JUDGMENT_MARK + THE_RECKONING end-to-end (U/I keys → SpecialAttackSystem → Bus HIT_SPECIAL → enemy routed via sprite map)
-[    ] 08. SpecialAttack — remaining 5 specials selectable via input (currently JUDGMENT_MARK + THE_RECKONING only)
-[WIP ] 09. Enemy roster — ironveil faction in progress (background agent running)
+[DONE] 08. SpecialAttack — remaining 5 specials selectable via input (U/O/P/Q/I/E/R = all 7)
+[DONE] 09. Enemy roster — all 31 files, 0 TS errors (ironveil/6, thewild/5, voidborn/4, gilded/4, forgotten/4, silentones/3, neutral/3, minibosses/2)
 [DONE] 10. DialogueSystem — wired to NPC entity, Magistra Eon starter tree, advance() + Bus events
 [DONE] 11. Supabase — schema migration (20260407_initial_schema.sql), SaveSystem wired to queries.ts + Bus events (BONFIRE_REST/BOSS_KILLED/REGION_ENTER auto-save)
-[ ] 12. Vercel deploy
+[DONE] 12. Vercel deploy
 
 AFTER EACH ITEM:
   → TypeScript check (tsc --noEmit)
@@ -455,4 +455,4 @@ Rules:
 
 ---
 
-*Last updated: 2026-04-07 | Systems phase complete — integration phase next*
+*Last updated: 2026-04-07 | Build queue complete — all 12 items done*

@@ -4,6 +4,7 @@ import { GuardEnemy }           from '../entities/enemies/GuardEnemy';
 import { JuiceSystem }          from '../systems/JuiceSystem';
 import { LightingSystem }       from '../systems/LightingSystem';
 import { SkySystem }            from '../systems/SkySystem';
+import type { SkyRegion }       from '../systems/SkySystem';
 import { CinematicSystem }      from '../systems/CinematicSystem';
 import { SpecialAttackSystem }  from '../systems/SpecialAttackSystem';
 import { Bus, GameEvent }       from '../systems/EventBus';
@@ -99,8 +100,26 @@ export default class TownScene extends Phaser.Scene {
 
     // ── Input ──────────────────────────────────────────────────────────
     this._cursors = this.input.keyboard!.createCursorKeys();
-    ['J', 'K', 'L', 'Z', 'U', 'I', 'W', 'A', 'D'].forEach(k => {
+    // Combat + 7 specials: U O P Q I E R
+    ['J', 'K', 'L', 'Z', 'W', 'A', 'D', 'U', 'O', 'P', 'Q', 'I', 'E', 'R'].forEach(k => {
       this._keys[k] = this.input.keyboard!.addKey(k);
+    });
+
+    // ── Region switcher (Item 03 playtest): keys 1–6 ──────────────────
+    const REGION_KEYS: Record<string, SkyRegion> = {
+      '1': 'ASHFIELDS',
+      '2': 'VERDENMERE',
+      '3': 'GREYVEIL',
+      '4': 'GILDSPIRE',
+      '5': 'VOIDMARSH',
+      '6': 'UNNAMED_CITY',
+    };
+    this.input.keyboard!.on('keydown', (ev: KeyboardEvent) => {
+      const region = REGION_KEYS[ev.key];
+      if (region) {
+        this._sky.setRegion(region);
+        Bus.emit(GameEvent.REGION_ENTER, region);
+      }
     });
 
     // ── Player HP bar ──────────────────────────────────────────────────
@@ -117,12 +136,19 @@ export default class TownScene extends Phaser.Scene {
     this._apDisplay = new APDisplay(this, this._player.ap, 4, H - 26);
 
     // ── Controls hint ──────────────────────────────────────────────────
-    this.add.text(W / 2, 4,
-      'J:light  K:heavy  L:dodge  Z:block  U:special(1AP)  I:finisher(3AP)',
-      {
-        fontFamily: "'Press Start 2P'", fontSize: FONT.XS, color: '#4a4a6a',
-        align: 'center',
-      },
+    this.add.text(W / 2, 2,
+      'J:light  K:heavy  L:dodge  Z:block',
+      { fontFamily: "'Press Start 2P'", fontSize: FONT.XS, color: '#4a4a6a', align: 'center' },
+    ).setOrigin(0.5, 0).setScrollFactor(0).setDepth(80);
+
+    this.add.text(W / 2, 10,
+      'U:JudgMark  O:PhantStep  P:VoidCrucible  Q:ThornReq  I:Reckoning  E:SisEcho  R:WrldsWt',
+      { fontFamily: "'Press Start 2P'", fontSize: FONT.XS, color: '#3a3a5a', align: 'center' },
+    ).setOrigin(0.5, 0).setScrollFactor(0).setDepth(80);
+
+    this.add.text(W / 2, 18,
+      '1:Ashfields  2:Verdenmere  3:Greyveil  4:Gildspire  5:Voidmarsh  6:UnnamedCity',
+      { fontFamily: "'Press Start 2P'", fontSize: FONT.XS, color: '#2a3a2a', align: 'center' },
     ).setOrigin(0.5, 0).setScrollFactor(0).setDepth(80);
 
     // ── YOU DIED overlay ───────────────────────────────────────────────

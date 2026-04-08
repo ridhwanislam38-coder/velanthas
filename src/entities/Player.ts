@@ -290,8 +290,14 @@ export class Player {
     const lightKey  = keys['J'];
     const heavyKey  = keys['K'];
     const dodgeKey  = keys['L'];
-    const special1K = keys['U'];
-    const special3K = keys['I'];
+    // ── Specials: 7 total, one key each ───────────────────────────────
+    const sp1K = keys['U']; // JUDGMENT_MARK  (1AP)
+    const sp2K = keys['O']; // PHANTOM_STEP   (1AP)
+    const sp3K = keys['P']; // VOID_CRUCIBLE  (2AP)
+    const sp4K = keys['Q']; // THORNWALL_REQUIEM (2AP)
+    const sp5K = keys['I']; // THE_RECKONING  (3AP)
+    const sp6K = keys['E']; // SISTERS_ECHO   (3AP)
+    const sp7K = keys['R']; // WORLDS_WEIGHT  (3AP)
 
     if (dodgeKey && Phaser.Input.Keyboard.JustDown(dodgeKey)) {
       this.dodge.press();
@@ -314,27 +320,24 @@ export class Player {
       return;
     }
 
-    // Specials — routed through SpecialAttackSystem if available
-    if (special1K && Phaser.Input.Keyboard.JustDown(special1K)) {
-      if (this._specials && !this._specials.isActive) {
-        const targets = enemies
-          .filter(e => !e.isDead)
-          .map(e => e.sprite);
-        this._specials.use('JUDGMENT_MARK', this.sprite.x, this.sprite.y, targets);
-      } else if (!this._specials && this.ap.spend(1)) {
-        this._startAttack('special1', nowMs);
-      }
-      return;
-    }
+    // Specials — routed through SpecialAttackSystem
+    const specialBindings: Array<[Phaser.Input.Keyboard.Key | undefined, SpecialId]> = [
+      [sp1K, 'JUDGMENT_MARK'],
+      [sp2K, 'PHANTOM_STEP'],
+      [sp3K, 'VOID_CRUCIBLE'],
+      [sp4K, 'THORNWALL_REQUIEM'],
+      [sp5K, 'THE_RECKONING'],
+      [sp6K, 'SISTERS_ECHO'],
+      [sp7K, 'WORLDS_WEIGHT'],
+    ];
 
-    if (special3K && Phaser.Input.Keyboard.JustDown(special3K)) {
-      if (this._specials && !this._specials.isActive) {
-        const targets = enemies
-          .filter(e => !e.isDead)
-          .map(e => e.sprite);
-        this._specials.use('THE_RECKONING', this.sprite.x, this.sprite.y, targets);
-      } else if (!this._specials && this.ap.spend(3)) {
-        this._startAttack('special3', nowMs);
+    for (const [key, id] of specialBindings) {
+      if (key && Phaser.Input.Keyboard.JustDown(key)) {
+        if (this._specials && !this._specials.isActive) {
+          const targets = enemies.filter(e => !e.isDead).map(e => e.sprite);
+          this._specials.use(id, this.sprite.x, this.sprite.y, targets);
+        }
+        return;
       }
     }
   }
