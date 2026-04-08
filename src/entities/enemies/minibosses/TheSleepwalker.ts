@@ -2,40 +2,37 @@ import Phaser from 'phaser';
 import { JuiceSystem } from '../../../systems/JuiceSystem';
 import { ATTACK_DATA, checkHit, type FightStance, type AttackType } from '../../../systems/CombatSystem';
 import { Deaths, DIFFICULTY } from '../../../config/difficultyConfig';
-import { Bus, GameEvent } from '../../../systems/EventBus';
+import { Bus, GameEvent, } from '../../../systems/EventBus';
+import { makeSoundDetector } from '../../../systems/SightSystem';
 import type { Player } from '../../Player';
 
-// WailingWraith — passes through walls (ignore horizontal physics)
-// When it screams, nearby enemies are alerted (Bus.emit ENEMY_DETECT_RED)
-// Pattern A: phase through → touch damage
-// Pattern B: scream (attract + AOE fear) → wail strike
+// TheSleepwalker — SOUND_SIGHT only, moves randomly until alerted, then fast
+// Sleepwalking state: random meandering, ignores player visually
+// Alerted state: extremely fast, aggressive pursuit
+// Sound events: PLAYER_LAND, footsteps, player attacks nearby
 
 export type EnemyState =
-  | 'patrol' | 'detect' | 'approach'
-  | 'telegraph_light' | 'telegraph_unblockable'
-  | 'attack_touch' | 'attack_wail'
-  | 'screaming' | 'stagger' | 'recover' | 'dead';
+  | 'sleepwalk' | 'alerted' | 'approach_fast'
+  | 'telegraph_light' | 'telegraph_heavy' | 'telegraph_unblockable'
+  | 'attack_light' | 'attack_heavy' | 'attack_slam'
+  | 'stagger' | 'recover' | 'dead';
 
 type AttackPattern = 'A' | 'B';
 
-const DETECT_RANGE  = 200;
-const TOUCH_RANGE   = 40;
-const WAIL_RANGE    = 180;
-const MOVE_SPEED    = 55;
-const PATROL_SPEED  = 30;
-const SCREAM_RADIUS = 320; // alerts nearby enemies
+const ATTACK_RANGE    = 70;
+const SLEEPWALK_SPEED = 30;  // slow, random
+const ALERT_SPEED     = 150; // very fast when alerted
+const CALM_DOWN_TIME  = 8000; // ms without sound → returns to sleepwalk
 
-export class WailingWraith {
+export class TheSleepwalker {
   readonly sprite: Phaser.Physics.Arcade.Image;
   private _scene:  Phaser.Scene;
   private _juice:  JuiceSystem;
 
-  private _state: EnemyState = 'patrol';
+  private _state: EnemyState = 'sleepwalk';
   private _stateTimer  = 0;
   private _attackTimer = 0;
   private _telegraphFrame = 0;
-  private _patrolDir: 1 | -1 = 1;
-  private _patrolBounce = 0;
 
   private _hp:     number;
   private _maxHp:  number;
@@ -46,10 +43,18 @@ export class WailingWraith {
   private _playerDodgeCount  = 0;
   private _playerAttackCount = 0;
 
-  private _screamTimer = 0;
+  // Sound detection
+  private _alerted    = false;
+  private _alertTimer = 0; // counts down to calm
+  private _soundCleanup: (() => void) | null = null;
+
+  // Sleepwalk direction timer
+  private _sleepDir: 1 | -1 = 1;
+  private _sleepDirTimer = 0;
 
   private readonly TELEGRAPH_FRAMES: Record<string, number> = {
     telegraph_light:       12,
+    telegraph_heavy:       18,
     telegraph_unblockable: 16,
   };
 
@@ -57,23 +62,42 @@ export class WailingWraith {
     scene: Phaser.Scene,
     x: number, y: number,
     juice: JuiceSystem,
-    hp = DIFFICULTY.HP.GUARD,
+    hp = DIFFICULTY.HP.MINIBOSS,
   ) {
     this._scene = scene;
     this._juice = juice;
     this._hp = this._maxHp = hp;
 
-    this.sprite = scene.physics.add.image(x, y, 'wailing_wraith');
+    this.sprite = scene.physics.add.image(x, y, 'the_sleepwalker');
     this.sprite.setDepth(8);
-    this.sprite.setCollideWorldBounds(false); // can go out of bounds (wall-phase)
-    this.sprite.setAlpha(0.85); // semi-transparent
+    this.sprite.setCollideWorldBounds(true);
+    this.sprite.setScale(1.3);
 
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;
     body.setMaxVelocityY(900);
-    body.setAllowGravity(true);
-    // Ignore horizontal world collision — phases through walls
-    body.checkCollision.left  = false;
-    body.checkCollision.right = false;
+
+    // Wire SOUND_SIGHT
+    this._soundCleanup = makeSoundDetector({
+      scene,
+      entity: this.sprite,
+      ranges: { footstep: 120, attack: 180, land: 200 },
+      onDetect: () => this._onSoundDetected(),
+    });
+  }
+
+  private _onSoundDetected(): void {
+    if (this._state === 'dead') return;
+    this._alerted = true;
+    this._alertTimer = CALM_DOWN_TIME;
+    if (this._state === 'sleepwalk') {
+      this._juice.flash(0xff8800, 0.4, 150);
+      Bus.emit(GameEvent.ENEMY_DETECT_RED, {
+        id: 'sleepwalker_alerted',
+        sourceX: this.sprite.x,
+        sourceY: this.sprite.y,
+      });
+      this._transition('alerted');
+    }
   }
 
   update(delta: number, player: Player): void {
@@ -86,13 +110,16 @@ export class WailingWraith {
 
     this._stateTimer  += delta;
     this._attackTimer  = Math.max(0, this._attackTimer - delta);
-    this._screamTimer  = Math.max(0, this._screamTimer - delta);
 
-    // Periodic scream if not in combat and detected
-    const wState: string = this._state;
-    if (this._screamTimer <= 0 && wState !== 'screaming' && wState !== 'dead' && dist < DETECT_RANGE) {
-      this._screamTimer = 6000;
-      this._initiateScream();
+    // Alert decay
+    if (this._alerted) {
+      this._alertTimer -= delta;
+      if (this._alertTimer <= 0) {
+        this._alerted = false;
+        if (this._state === 'approach_fast' || this._state === 'alerted') {
+          this._transition('sleepwalk');
+        }
+      }
     }
 
     this._updateFacing(player);
@@ -103,45 +130,46 @@ export class WailingWraith {
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;
 
     switch (this._state) {
-      case 'patrol': {
-        body.setVelocityX(PATROL_SPEED * this._patrolDir);
-        this._patrolBounce += delta;
-        if (this._patrolBounce > 2000) {
-          this._patrolBounce = 0;
-          this._patrolDir = (this._patrolDir * -1) as 1 | -1;
+      case 'sleepwalk': {
+        // Random direction changes
+        this._sleepDirTimer -= delta;
+        if (this._sleepDirTimer <= 0) {
+          this._sleepDirTimer = 800 + Math.random() * 1200;
+          this._sleepDir = (Math.random() > 0.5 ? 1 : -1) as 1 | -1;
+          this.sprite.setFlipX(this._sleepDir < 0);
         }
-        if (dist < DETECT_RANGE) this._transition('detect');
+        body.setVelocityX(SLEEPWALK_SPEED * this._sleepDir);
+
+        // Bounce off walls
+        if (body.blocked.left)  this._sleepDir =  1;
+        if (body.blocked.right) this._sleepDir = -1;
         break;
       }
 
-      case 'detect': {
+      case 'alerted': {
         body.setVelocityX(0);
-        if (this._stateTimer > 200) this._transition('approach');
+        // Brief realization pause
+        if (this._stateTimer > 400) {
+          this._transition('approach_fast');
+        }
         break;
       }
 
-      case 'approach': {
+      case 'approach_fast': {
+        if (!this._alerted) { this._transition('sleepwalk'); break; }
         const dir = player.x > this.sprite.x ? 1 : -1;
-        body.setVelocityX(MOVE_SPEED * dir);
-        if (dist > DETECT_RANGE * 1.5) this._transition('patrol');
-        if (dist < TOUCH_RANGE && this._attackTimer <= 0) {
-          this._pattern = this._playerAttackCount >= DIFFICULTY.ATTACK_SPAM_THRESHOLD ? 'B' : 'A';
-          this._playerAttackCount = 0;
+        body.setVelocityX(ALERT_SPEED * dir);
+        if (dist < ATTACK_RANGE && this._attackTimer <= 0) {
+          this._pattern = this._playerDodgeCount >= DIFFICULTY.DODGE_SPAM_THRESHOLD ? 'B' : 'A';
+          this._playerDodgeCount = 0;
           this._patternStep = 0;
           this._executeNextInPattern();
         }
         break;
       }
 
-      case 'screaming': {
-        body.setVelocityX(0);
-        if (this._stateTimer > 1200) {
-          this._transition('approach');
-        }
-        break;
-      }
-
       case 'telegraph_light':
+      case 'telegraph_heavy':
       case 'telegraph_unblockable': {
         body.setVelocityX(0);
         this._telegraphFrame++;
@@ -149,6 +177,7 @@ export class WailingWraith {
 
         if (this._telegraphFrame === 1) {
           if (this._state === 'telegraph_light') this._juice.onTelegraphLight(this.sprite);
+          else if (this._state === 'telegraph_heavy') this._juice.onTelegraphHeavy(this.sprite);
           else this._juice.onTelegraphUnblockable(this.sprite);
         }
 
@@ -165,30 +194,39 @@ export class WailingWraith {
         break;
       }
 
-      case 'attack_touch': {
-        // Phase through — collision damage
-        const dir = player.x > this.sprite.x ? 1 : -1;
-        body.setVelocityX(MOVE_SPEED * 2 * dir);
-        if (dist < TOUCH_RANGE) {
-          player.receiveHit(20, 120, 15);
-          body.setVelocityX(0);
-          this._attackTimer = 1000;
-          this._transition('recover');
-        } else if (this._stateTimer > 400) {
-          body.setVelocityX(0);
-          this._attackTimer = 800;
-          this._transition('recover');
+      case 'attack_light': {
+        body.setVelocityX(0);
+        if (this._stateTimer > 160) {
+          const result = checkHit(this.stance, player.stance, 'light');
+          if (result.connected) {
+            const data = ATTACK_DATA['light'];
+            player.receiveHit(data.damage, data.knockback, data.hitstun);
+          }
+          this._executeNextInPattern();
         }
         break;
       }
 
-      case 'attack_wail': {
+      case 'attack_heavy': {
         body.setVelocityX(0);
-        if (this._stateTimer > 300) {
-          // Wail strike in range
-          if (dist < WAIL_RANGE) {
-            player.receiveHit(35, 180, 25);
-            this._juice.flash(0xaaaaff, 0.4, 150);
+        if (this._stateTimer > 200) {
+          const result = checkHit(this.stance, player.stance, 'heavy');
+          if (result.connected) {
+            const data = ATTACK_DATA['heavy'];
+            player.receiveHit(data.damage, data.knockback, data.hitstun);
+          }
+          this._executeNextInPattern();
+        }
+        break;
+      }
+
+      case 'attack_slam': {
+        body.setVelocityX(0);
+        if (this._stateTimer > 280) {
+          const result = checkHit(this.stance, player.stance, 'heavy');
+          if (result.connected) {
+            player.receiveHit(55, 240, 35);
+            this._juice.shake(0.008, 300);
           }
           this._attackTimer = 1600;
           this._transition('recover');
@@ -203,13 +241,9 @@ export class WailingWraith {
 
       case 'recover': {
         body.setVelocityX(0);
-        if (this._stateTimer > 350) {
-          if (this._hitCount >= 3) {
-            this._hitCount = 0;
-            this._transition('patrol'); // retreat through walls
-          } else {
-            this._transition('approach');
-          }
+        if (this._stateTimer > 400) {
+          if (this._alerted) this._transition('approach_fast');
+          else this._transition('sleepwalk');
         }
         break;
       }
@@ -222,37 +256,34 @@ export class WailingWraith {
 
   private _executeNextInPattern(): void {
     if (this._pattern === 'A') {
-      const steps: EnemyState[] = ['telegraph_light', 'attack_touch'];
+      const steps: EnemyState[] = [
+        'telegraph_light', 'attack_light',
+        'telegraph_light', 'attack_light',
+        'telegraph_heavy', 'attack_heavy',
+      ];
       const next = steps[this._patternStep];
       if (next) { this._transition(next); this._patternStep++; }
       else { this._patternStep = 0; this._attackTimer = 1000; this._transition('recover'); }
     } else {
-      const steps: EnemyState[] = ['telegraph_unblockable', 'attack_wail'];
+      const steps: EnemyState[] = ['telegraph_unblockable', 'attack_slam'];
       const next = steps[this._patternStep];
       if (next) { this._transition(next); this._patternStep++; }
       else { this._patternStep = 0; this._transition('recover'); }
     }
   }
 
-  private _initiateScream(): void {
-    this._transition('screaming');
-    this._juice.flash(0xaaaaff, 0.5, 200);
-
-    // Alert nearby enemies via Bus
-    Bus.emit(GameEvent.ENEMY_DETECT_RED, {
-      id: 'wraith_scream',
-      sourceX: this.sprite.x,
-      sourceY: this.sprite.y,
-      radius: SCREAM_RADIUS,
-    });
-  }
-
   receiveHit(result: { data: { damage: number; knockback: number; hitstun: number } }, _attacker: Player): void {
     if (this._state === 'dead') return;
+
+    // Getting hit always alerts the Sleepwalker
+    if (!this._alerted) {
+      this._onSoundDetected();
+    }
 
     this._hp = Math.max(0, this._hp - result.data.damage);
     this._hitCount++;
     this._attackTimer = 900;
+    this._alertTimer = CALM_DOWN_TIME; // reset calm timer
 
     this.sprite.setTint(0xffffff);
     this._scene.time.delayedCall(80, () => {
@@ -266,7 +297,7 @@ export class WailingWraith {
     if (this._hp <= 0) { this._die(_attacker); return; }
 
     this._transition('stagger');
-    this._scene.time.delayedCall(400, () => {
+    this._scene.time.delayedCall(450, () => {
       if (this._state === 'stagger') this._transition('recover');
     });
   }
@@ -276,7 +307,12 @@ export class WailingWraith {
 
   private _die(killer: Player): void {
     this._state = 'dead';
-    killer.ap.gain(2, 'kill');
+    if (this._soundCleanup) {
+      this._soundCleanup();
+      this._soundCleanup = null;
+    }
+    killer.ap.gain(5, 'kill');
+    Bus.emit(GameEvent.BOSS_KILLED, { entity: this.sprite, bossId: 'the_sleepwalker' });
     this._juice.onKill(this.sprite);
 
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;
@@ -286,9 +322,8 @@ export class WailingWraith {
     this._scene.tweens.add({
       targets: this.sprite,
       alpha: 0,
-      scaleX: 1.5, scaleY: 1.5,
-      duration: 600,
-      delay: 300,
+      duration: 1000,
+      delay: 800,
       onComplete: () => this.sprite.destroy(),
     });
   }
@@ -299,7 +334,9 @@ export class WailingWraith {
   }
 
   private _updateFacing(player: Player): void {
-    this.sprite.setFlipX(!(player.x > this.sprite.x));
+    if (this._alerted && (this._state === 'approach_fast' || this._state === 'alerted')) {
+      this.sprite.setFlipX(!(player.x > this.sprite.x));
+    }
   }
 
   get stance(): FightStance {
@@ -314,5 +351,6 @@ export class WailingWraith {
   get maxHp(): number { return this._maxHp; }
   get hpPct(): number { return this._hp / this._maxHp; }
   get isDead(): boolean { return this._state === 'dead'; }
+  get isAlerted(): boolean { return this._alerted; }
   get state(): EnemyState { return this._state; }
 }

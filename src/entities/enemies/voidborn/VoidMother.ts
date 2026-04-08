@@ -75,7 +75,8 @@ export class VoidMother {
     this._spawnTimer  -= delta;
 
     // Periodic spawning
-    if (this._spawnTimer <= 0 && this._state !== 'spawning' && this._state !== 'dead') {
+    const vmState: string = this._state;
+    if (this._spawnTimer <= 0 && vmState !== 'spawning' && vmState !== 'dead') {
       this._spawnTimer = SPAWN_INTERVAL;
       this._beginSpawning();
     }

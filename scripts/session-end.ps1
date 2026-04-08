@@ -1,4 +1,4 @@
-# session-end.ps1 — run at the end of every Claude Code session
+# session-end.ps1 - run at the end of every Claude Code session
 $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm"
 $game      = "C:\Users\nawfi\StudyQuestV3"
 $vault     = "C:\Users\nawfi\OneDrive\Documents\My remote vault"
@@ -25,7 +25,7 @@ if ($status) {
     git push
     Write-Host "Pushed to remote."
   } else {
-    Write-Host "No remote configured — skipping push."
+    Write-Host "No remote configured - skipping push."
   }
 } else {
   Write-Host "Nothing to commit."
