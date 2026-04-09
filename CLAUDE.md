@@ -387,12 +387,12 @@ Build in this order, one item at a time, each passing TS + feel test before the 
 [ ]           → move to ElevationSystem 3/4-view projection
 [DONE] 03. AudioSystem refactor — 3 channels (ambientBed/Layer/sfx), NO music
 [DONE] 04. InputSystem — keyboard + Gamepad API, rebindable, persisted
-[NEXT] 05. OccluderSystem — tall props/terrain fade when covering player
-[ ]    06. PostFXSystem — bloom, DoF, motion blur, chromatic aberration
-[ ]    07. Ashfields region scene (first real map, LDtk) — 6 enemies, 1 bonfire,
-[ ]         1 NPC with quest, ambient soundscape, 3 destructibles, 1 secret
-[ ]    08. CurrencySystem + merchant NPC + loot tables
-[ ]    09. JournalSystem — quest + lore + choices tracking UI
+[DONE] 05. OccluderSystem — tall props/terrain fade when covering player
+[DONE] 06. PostFXSystem — bloom, DoF, motion blur, chromatic aberration
+[DONE] 07a. Ashfields scene scaffold (code-only, awaiting AI tool assets)
+[ ]    07b. Ashfields assets — LDtk map + RetroDiffusion sprites + FreeSound ambient
+[DONE] 08. CurrencySystem + loot tables for all 31 enemies + 6 destructibles
+[DONE] 09. JournalSystem — quest + lore + choices tracking, serialisable
 [ ]    10. CustomizationSystem — outfit/hair swap, save-backed
 [ ]    11. FastTravelSystem — void-cut portals, per-class effects
 [ ]    12. FarmingSystem — harvest nodes, respawn timer, crafting table stub
