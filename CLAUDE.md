@@ -398,9 +398,19 @@ Build in this order, one item at a time, each passing TS + feel test before the 
 [DONE] 11. FastTravelSystem — 12 portals, discovery-based, per-class void-cut FX
 [DONE] 12. FarmingSystem — 5 material types, harvest + respawn + 3 crafting recipes
 [ ]    13. Remotion cinematic pipeline — first cutscene (Prologue) rendered end-to-end
-[DONE] 14. ElevenLabs voice pipeline — Magistra Eon (Sarah) + Grimdar (Harry) + Narrator (Alice), wired to DialogueSystem
+[DONE] 14. ElevenLabs voice — 16 lines total (Magistra, Grimdar, LumaMoth, Warden, SisterSilence, Verso, Narrator)
 [ ]    15. RetroDiffusion sprite pipeline — needs API key
-[DONE] 16. VerdenmereScene scaffold — bioluminescent forest, 15 fireflies, 6 occluder trees
+[DONE] 16. All 6 region scenes scaffolded (Ashfields, Verdenmere, Greyveil, Gildspire, Voidmarsh, Unnamed City)
+[DONE] 17. FreeSound ambient — 5 regions wired (10 files: bed + layer per region)
+[DONE] 18. EquipmentSystem — 30 items (12 weapons, 8 armour, 5 accessories, 5 pictos)
+[DONE] 19. DeathRespawnSystem — 10% lumen penalty, boss death tracking, hint escalation
+[DONE] 20. SceneTransitionSystem — fade/color/void-cut transitions
+[DONE] 21. HUD — HP bar, AP orbs, currency, region name flash
+[DONE] 22. PauseMenu — ESC overlay, volume settings, quit-to-title
+[DONE] 23. SaveSlotUI — 5 save slots for title screen
+[DONE] 24. MiniMap — corner region indicator with player dot
+[DONE] 25. NPC roster — 12 quest NPCs + 20 ambient NPCs configured
+[DONE] 26. Quest/Lore content — 12 quests (3 main + 9 side) + 50 lore fragments registered
 ```
 
 After each item:
