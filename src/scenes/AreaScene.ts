@@ -10,7 +10,7 @@ import { W, H, FONT }        from '../config/Constants';
 // A single scene class that loads any area by its AreaConfig.
 // Receives `{ areaId, spawnX?, spawnY? }` via init data.
 // Background at depth 5, player y-sorted between 10-9998.
-// No collision grid, no foreground layer — player walks freely.
+// Collision grid loaded from JSON — blocks player from walking into buildings.
 
 const MOVE_SPEED   = 80;
 const FADE_MS      = 500;
@@ -26,6 +26,7 @@ export default class AreaScene extends BaseWorldScene {
   private _area!:      AreaConfig;
   private _player!:    Phaser.Physics.Arcade.Image;
   private _bgImage!:   Phaser.GameObjects.Image;
+  private _walls!:     Phaser.Physics.Arcade.StaticGroup;
   private _transitioning = false;
 
   constructor() { super({ key: 'AreaScene' }); }
@@ -74,6 +75,10 @@ export default class AreaScene extends BaseWorldScene {
 
     this.addYSortable(this._player);
     this.followTarget(this._player);
+
+    // ── Collision walls from JSON grid ──────────────────────────────
+    this._walls = this.physics.add.staticGroup();
+    this._buildCollisionFromJson(area);
 
     // ── Input ────────────────────────────────────────────────────────
     Input.init(this);
@@ -203,6 +208,41 @@ export default class AreaScene extends BaseWorldScene {
         } satisfies AreaInitData);
       });
     });
+  }
+
+  // ── Collision grid from JSON ───────────────────────────────────────────
+  private _buildCollisionFromJson(area: AreaConfig): void {
+    const key = `${area.id}_collision`;
+    const data = this.cache.json.get(key) as {
+      cellSize: number; cols: number; rows: number; grid: number[][];
+    } | undefined;
+
+    if (!data) return; // no collision map for this area
+
+    const { cellSize, cols, rows, grid } = data;
+    // Scale factor: image is 1024px, world is area.worldW (480)
+    const scaleX = area.worldW / (cols * cellSize);
+    const scaleY = area.worldH / (rows * cellSize);
+    const cellW = cellSize * scaleX;
+    const cellH = cellSize * scaleY;
+
+    for (let r = 0; r < rows; r++) {
+      const row = grid[r];
+      if (!row) continue;
+      for (let c = 0; c < cols; c++) {
+        if (row[c] !== 1) continue; // walkable
+        const wx = c * cellW + cellW / 2;
+        const wy = r * cellH + cellH / 2;
+        const wall = this.add.rectangle(wx, wy, cellW, cellH, 0xff0000, 0)
+          .setOrigin(0.5);
+        this.physics.add.existing(wall, true); // static body
+        this._walls.add(wall);
+      }
+    }
+
+    // Collide player with walls
+    this.physics.add.collider(this._player, this._walls);
+    console.log(`[AreaScene] Loaded collision grid for ${area.id}: ${cols}x${rows}`);
   }
 
   // ── Ambient particles ─────────────────────────────────────────────────
