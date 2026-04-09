@@ -73,6 +73,16 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('env_ruin_wall',   'assets/tiles/environments/ruined_wall.png');
     this.load.image('env_bonfire',     'assets/tiles/environments/bonfire.png');
 
+    // ── HD-2D Environment backgrounds (PixelLab) ──────────────────────
+    this.load.image('ashfields_bg_far',     'assets/tiles/environments/ashfields_bg_far.png');
+    this.load.image('ashfields_bg_mid',     'assets/tiles/environments/ashfields_bg_mid.png');
+    this.load.image('ashfields_ground_det', 'assets/tiles/environments/ashfields_ground_detail.png');
+    this.load.image('verdenmere_bg_far',    'assets/tiles/environments/verdenmere_bg_far.png');
+    this.load.image('verdenmere_bg_mid',    'assets/tiles/environments/verdenmere_bg_mid.png');
+    this.load.image('env_ash_rock',         'assets/tiles/environments/ash_rock_large.png');
+    this.load.image('env_broken_pillar',    'assets/tiles/environments/broken_pillar.png');
+    this.load.image('env_ember_pool',       'assets/tiles/environments/ember_pool.png');
+
     // ── Ambient SFX (FreeSound) ────────────────────────────────────────
     this.load.audio('wind_ashfields',  'assets/generated/audio/ambient/wind_ashfields.wav');
     this.load.audio('distant_bell',    'assets/generated/audio/ambient/distant_bell.wav');

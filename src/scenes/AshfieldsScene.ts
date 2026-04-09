@@ -50,12 +50,37 @@ export default class AshfieldsScene extends BaseWorldScene {
     };
     super.create(config);
 
-    // ── Sky background fallback gradient ────────────────────────────────
-    const skyGrad = this.add.graphics();
-    skyGrad.fillGradientStyle(0x1a1520, 0x1a1520, 0x2a1a0e, 0x2a1a0e, 1);
-    skyGrad.fillRect(0, 0, WORLD_W, WORLD_H);
-    skyGrad.setDepth(0);
-    skyGrad.setScrollFactor(0.3); // slow parallax
+    // ── HD-2D Parallax Background Layers ──────────────────────────────
+    // Layer 0: Far background (mountains/sky) — slow parallax
+    if (this.textures.exists('ashfields_bg_far')) {
+      const bgFar = this.add.image(WORLD_W / 2, WORLD_H * 0.3, 'ashfields_bg_far');
+      bgFar.setDisplaySize(WORLD_W * 1.4, WORLD_H * 0.7);
+      bgFar.setDepth(DEPTH.BG_FAR);
+      bgFar.setScrollFactor(0.15);  // moves very slowly — distant feel
+      bgFar.setAlpha(0.8);
+    } else {
+      // Gradient fallback
+      const skyGrad = this.add.graphics();
+      skyGrad.fillGradientStyle(0x1a1520, 0x1a1520, 0x2a1a0e, 0x2a1a0e, 1);
+      skyGrad.fillRect(0, 0, WORLD_W, WORLD_H);
+      skyGrad.setDepth(DEPTH.BG_FAR);
+      skyGrad.setScrollFactor(0.15);
+    }
+
+    // Layer 1: Mid background (ruins/structures) — medium parallax
+    if (this.textures.exists('ashfields_bg_mid')) {
+      const bgMid = this.add.image(WORLD_W / 2, WORLD_H * 0.5, 'ashfields_bg_mid');
+      bgMid.setDisplaySize(WORLD_W * 1.2, WORLD_H * 0.6);
+      bgMid.setDepth(DEPTH.BG_MID);
+      bgMid.setScrollFactor(0.35);  // moves at medium speed
+      bgMid.setAlpha(0.6);
+    }
+
+    // Layer 2: Ground base color
+    const groundBase = this.add.graphics();
+    groundBase.fillStyle(0x1a140e, 1);
+    groundBase.fillRect(0, 0, WORLD_W, WORLD_H);
+    groundBase.setDepth(DEPTH.BG_PROPS);
 
     // ── Procedural map generation ───────────────────────────────────────
     const mapData = generateMap('ASHFIELDS', WORLD_W / 32, WORLD_H / 32, 32, 42);
