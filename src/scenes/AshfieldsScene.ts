@@ -55,8 +55,8 @@ export default class AshfieldsScene extends BaseWorldScene {
     this._walls = this.physics.add.staticGroup();
     this._buildWallsFromGrid();
 
-    // ── Player — spawn in open area ───────────────────────────────────
-    this._player = this.physics.add.image(WORLD_W / 2, WORLD_H * 0.6, 'hero_idle_0');
+    // ── Player — spawn in the courtyard (bottom-center of tavern image)
+    this._player = this.physics.add.image(WORLD_W * 0.5, WORLD_H * 0.75, 'hero_idle_0');
     this._player.setDepth(DEPTH.GAME);
     this._player.setCollideWorldBounds(true);
     const body = this._player.body as Phaser.Physics.Arcade.Body;
