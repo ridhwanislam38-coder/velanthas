@@ -13,17 +13,19 @@ import { W, H }                 from '../config/Constants';
 // Full 1024x1024 Leonardo AI background. Player walks in walkable zones only.
 // Press F2 to toggle collision editor (paint walkable/blocked zones).
 
-const WORLD_W = 1024;
-const WORLD_H = 1024;
-const MOVE_SPEED = 100;
+// World = 480x480 game pixels. The 1024x1024 image scales to fit.
+// Camera viewport is 320x180, so you see ~67% width at a time with scroll at edges.
+const WORLD_W = 480;
+const WORLD_H = 480;
+const MOVE_SPEED = 80;
 
-// Collision grid — 16x16 cells over 1024x1024 = 64 cells each axis
+// Collision grid — 16x16 cells over 480x480 = 30 cells each axis
 const GRID_SIZE = 16;
-const GRID_COLS = WORLD_W / GRID_SIZE;  // 64
-const GRID_ROWS = WORLD_H / GRID_SIZE;  // 64
+const GRID_COLS = Math.ceil(WORLD_W / GRID_SIZE);  // 30
+const GRID_ROWS = Math.ceil(WORLD_H / GRID_SIZE);  // 30
 
 // Version tag — bump to invalidate saved collision data on grid size change
-const COLLISION_VERSION = 'v2_16x16';
+const COLLISION_VERSION = 'v3_480';
 
 export default class AshfieldsScene extends BaseWorldScene {
   private _sky!:      SkySystem;
@@ -67,8 +69,8 @@ export default class AshfieldsScene extends BaseWorldScene {
     this._walls = this.physics.add.staticGroup();
     this._buildWallsFromGrid();
 
-    // ── Player — spawn in the courtyard (bottom-center of tavern image)
-    this._player = this.physics.add.image(WORLD_W * 0.5, WORLD_H * 0.75, 'hero_idle_0');
+    // ── Player — spawn dead center of the courtyard area
+    this._player = this.physics.add.image(WORLD_W * 0.5, WORLD_H * 0.55, 'hero_idle_0');
     this._player.setDepth(DEPTH.GAME);
     this._player.setCollideWorldBounds(true);
     const body = this._player.body as Phaser.Physics.Arcade.Body;
