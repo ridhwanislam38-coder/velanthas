@@ -100,7 +100,7 @@ export default class AreaScene extends BaseWorldScene {
       area.playerSpawn.y,
       'hero_idle_0',
     );
-    this._player.setScale(1.0);  // full size — proper Triangle Strategy proportions
+    this._player.setScale(0.25); // 128px * 0.25 = 32px — fits doors/buildings properly
     this._player.setAlpha(1.0);  // ALWAYS fully opaque
     this._player.setBlendMode(Phaser.BlendModes.NORMAL);
     this._player.setDepth(area.playerSpawn.y);
