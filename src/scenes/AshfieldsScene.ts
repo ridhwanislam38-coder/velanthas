@@ -64,10 +64,11 @@ export default class AshfieldsScene extends BaseWorldScene {
       this._fgImage.setDepth(9999);
     }
 
-    // ── Collision grid — load saved or generate default ───────────────
-    this._initCollisionGrid();
+    // ── Collision DISABLED — will be replaced by multi-area system ─────
+    this._collisionGrid = [];
     this._walls = this.physics.add.staticGroup();
-    this._buildWallsFromGrid();
+    // this._initCollisionGrid();
+    // this._buildWallsFromGrid();
 
     // ── Player — spawn dead center of the courtyard area
     this._player = this.physics.add.image(WORLD_W * 0.5, WORLD_H * 0.55, 'hero_idle_0');
@@ -75,12 +76,12 @@ export default class AshfieldsScene extends BaseWorldScene {
     this._player.setCollideWorldBounds(true);
     const body = this._player.body as Phaser.Physics.Arcade.Body;
     body.setDrag(600, 600);
-    body.setSize(12, 8);     // smaller hitbox so player fits between buildings
-    body.setOffset(10, 22);  // offset to feet area
+    // Full body — no offset issues
 
     this.addYSortable(this._player);
     this.followTarget(this._player);
-    this.physics.add.collider(this._player, this._walls);
+    // Collision disabled — multi-area system will handle this
+    // this.physics.add.collider(this._player, this._walls);
 
     // ── Input ─────────────────────────────────────────────────────────
     Input.init(this);
@@ -233,7 +234,8 @@ export default class AshfieldsScene extends BaseWorldScene {
       localStorage.setItem('ashfields_collision_version', COLLISION_VERSION);
       this._buildWallsFromGrid();
       // Re-add collider
-      this.physics.add.collider(this._player, this._walls);
+      // Collision disabled — multi-area system will handle this
+    // this.physics.add.collider(this._player, this._walls);
       this._editGraphics.clear();
     }
   }
