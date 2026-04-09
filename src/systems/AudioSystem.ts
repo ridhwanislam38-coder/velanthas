@@ -205,16 +205,37 @@ export class AudioSystem {
   }
 
   private _ambientPath(region: AmbientKey, type: 'bed' | 'layer'): string[] {
-    // Ashfields uses sourced FreeSound assets in the generated directory
-    if (region === 'ashfields') {
-      const fileMap: Record<string, string> = {
+    // Regions with sourced FreeSound assets in the generated directory
+    const generatedMap: Partial<Record<AmbientKey, Record<string, string>>> = {
+      ashfields: {
         bed:   'assets/generated/audio/ambient/wind_ashfields.wav',
         layer: 'assets/generated/audio/ambient/distant_bell.wav',
-      };
-      const src = fileMap[type];
+      },
+      verdenmere: {
+        bed:   'assets/generated/audio/ambient/verdenmere_bed.wav',
+        layer: 'assets/generated/audio/ambient/verdenmere_layer.wav',
+      },
+      greyveil: {
+        bed:   'assets/generated/audio/ambient/greyveil_bed.wav',
+        layer: 'assets/generated/audio/ambient/greyveil_layer.wav',
+      },
+      gildspire: {
+        bed:   'assets/generated/audio/ambient/gildspire_bed.wav',
+        layer: 'assets/generated/audio/ambient/gildspire_layer.wav',
+      },
+      voidmarsh: {
+        bed:   'assets/generated/audio/ambient/voidmarsh_bed.wav',
+        layer: 'assets/generated/audio/ambient/voidmarsh_layer.wav',
+      },
+    };
+
+    const regionMap = generatedMap[region];
+    if (regionMap) {
+      const src = regionMap[type];
       if (src) return [src];
     }
 
+    // Fallback for regions without generated audio yet
     const base = `assets/audio/ambient/${region}_${type}`;
     return [`${base}.webm`, `${base}.mp3`];
   }
