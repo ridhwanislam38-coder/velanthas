@@ -81,6 +81,23 @@ export default class AreaScene extends BaseWorldScene {
     // ── Region event ─────────────────────────────────────────────────
     Bus.emit(GameEvent.REGION_ENTER, { region: 'ASHFIELDS' });
 
+    // ── DoF vignette for diorama / tilt-shift feel ────────────────────
+    this.cameras.main.postFX.addVignette(0.5, 0.5, 0.9, 0.3);
+
+    // ── Lighting overlay — unifies background art + sprites ─────────
+    if (area.lightTint) {
+      const lightOverlay = this.add.rectangle(
+        area.worldW / 2, area.worldH / 2,
+        area.worldW, area.worldH,
+        area.lightTint.color, area.lightTint.alpha,
+      );
+      lightOverlay.setBlendMode(Phaser.BlendModes.MULTIPLY);
+      lightOverlay.setDepth(8); // between ground (5) and sprites (10+)
+    }
+
+    // ── Ambient particles ────────────────────────────────────────────
+    this._spawnParticles(area);
+
     // ── Camera fade in ───────────────────────────────────────────────
     this.cameras.main.fadeIn(FADE_MS, 0, 0, 0);
 
@@ -186,6 +203,59 @@ export default class AreaScene extends BaseWorldScene {
         } satisfies AreaInitData);
       });
     });
+  }
+
+  // ── Ambient particles ─────────────────────────────────────────────────
+  private _spawnParticles(area: AreaConfig): void {
+    const type = area.particles ?? 'none';
+    if (type === 'none') return;
+
+    const count = 12;
+    const isEmbers = type === 'embers';
+    const color  = isEmbers ? 0xee8833 : 0xddccaa;
+
+    for (let i = 0; i < count; i++) {
+      const dot = this.add.circle(
+        Phaser.Math.Between(20, area.worldW - 20),
+        Phaser.Math.Between(20, area.worldH - 20),
+        Phaser.Math.FloatBetween(0.5, 1.5),
+        color,
+        Phaser.Math.FloatBetween(0.1, 0.3),
+      );
+      dot.setDepth(100); // above sprites, below UI
+
+      if (isEmbers) {
+        // Embers float upward
+        this.tweens.add({
+          targets: dot,
+          x: `+=${Phaser.Math.Between(-15, 15)}`,
+          y: `-=${Phaser.Math.Between(30, 60)}`,
+          alpha: { from: 0.3, to: 0 },
+          duration: Phaser.Math.Between(3000, 6000),
+          yoyo: false,
+          repeat: -1,
+          delay: Phaser.Math.Between(0, 5000),
+          onRepeat: () => {
+            dot.setPosition(
+              Phaser.Math.Between(20, area.worldW - 20),
+              Phaser.Math.Between(area.worldH * 0.5, area.worldH - 20),
+            );
+          },
+        });
+      } else {
+        // Dust motes drift gently
+        this.tweens.add({
+          targets: dot,
+          x: `+=${Phaser.Math.Between(-30, 30)}`,
+          y: `+=${Phaser.Math.Between(-20, 20)}`,
+          alpha: { from: 0.1, to: 0.3 },
+          duration: Phaser.Math.Between(4000, 8000),
+          yoyo: true,
+          repeat: -1,
+          delay: Phaser.Math.Between(0, 5000),
+        });
+      }
+    }
   }
 
   // ── Area name toast ───────────────────────────────────────────────────

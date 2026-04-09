@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { registerAllContent } from '../config/questConfig';
+import { AREA_CONFIGS } from '../config/areaConfig';
 
 // ── BootScene — Preload all assets, then start game ─────────────────────────
 // NO canvas sprite generation. All art comes from PixelLab PNGs.
@@ -86,6 +87,13 @@ export default class BootScene extends Phaser.Scene {
     this.load.audio('magistra_eon_01', 'assets/generated/audio/dialogue/magistra_eon_01.mp3');
     this.load.audio('magistra_eon_02', 'assets/generated/audio/dialogue/magistra_eon_02.mp3');
     this.load.audio('magistra_eon_03', 'assets/generated/audio/dialogue/magistra_eon_03.mp3');
+
+    // ── Collision maps (AI-generated from image analysis) ─────────────
+    for (const [id, cfg] of Object.entries(AREA_CONFIGS)) {
+      if (cfg.collisionMap) {
+        this.load.json(`${id}_collision`, cfg.collisionMap);
+      }
+    }
   }
 
   create(): void {

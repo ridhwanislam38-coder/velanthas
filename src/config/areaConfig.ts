@@ -29,6 +29,12 @@ export interface AreaConfig {
   playerSpawn: { x: number; y: number };
   /** Transition zones linking to other areas */
   transitions: TransitionConfig[];
+  /** Lighting overlay tint for diorama feel */
+  lightTint?: { color: number; alpha: number };
+  /** Ambient particle type */
+  particles?: 'dust' | 'embers' | 'fireflies' | 'rain' | 'none';
+  /** Path to a JSON collision map (32x32 grid of 0=walkable, 1=blocked) */
+  collisionMap?: string;
 }
 
 // ── Ashfields Areas ─────────────────────────────────────────────────────────
@@ -60,6 +66,9 @@ export const AREA_CONFIGS: Record<string, AreaConfig> = {
         label: 'Enter Tavern',
       },
     ],
+    lightTint: { color: 0xaa8855, alpha: 0.06 },
+    particles: 'dust',
+    collisionMap: 'assets/areas/ashfields/square_2_collision.json',
   },
 
   ashfields_street: {
@@ -86,6 +95,8 @@ export const AREA_CONFIGS: Record<string, AreaConfig> = {
         label: 'To Market Square',
       },
     ],
+    lightTint: { color: 0x6688aa, alpha: 0.08 },
+    particles: 'dust',
   },
 
   ashfields_tavern: {
@@ -105,6 +116,8 @@ export const AREA_CONFIGS: Record<string, AreaConfig> = {
         label: 'Exit Tavern',
       },
     ],
+    lightTint: { color: 0xcc8844, alpha: 0.10 },
+    particles: 'embers',
   },
 
   ashfields_market: {
@@ -124,6 +137,8 @@ export const AREA_CONFIGS: Record<string, AreaConfig> = {
         label: 'To Back Alley',
       },
     ],
+    lightTint: { color: 0x8899aa, alpha: 0.05 },
+    particles: 'dust',
   },
 };
 
