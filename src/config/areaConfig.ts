@@ -43,7 +43,7 @@ export const AREA_CONFIGS: Record<string, AreaConfig> = {
     imagePath: 'assets/areas/ashfields/town_square_2.jpg',
     worldW: WORLD,
     worldH: WORLD,
-    playerSpawn: { x: 240, y: 340 },  // courtyard area (lower center of image)
+    playerSpawn: { x: 240, y: 390 },  // open cobblestone courtyard
     transitions: [
       {
         // Bottom-center → street
