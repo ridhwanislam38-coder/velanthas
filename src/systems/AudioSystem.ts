@@ -56,6 +56,9 @@ export class AudioSystem {
   // SFX pool: pre-loaded Howl instances keyed by SfxKey
   private _sfxPool = new Map<SfxKey, Howl>();
 
+  // Voice line channel (one at a time)
+  private _voice: Howl | null = null;
+
   // Current region (to skip redundant crossfades)
   private _currentRegion: AmbientKey | null = null;
 
@@ -84,10 +87,7 @@ export class AudioSystem {
     let howl = this._sfxPool.get(key);
     if (!howl) {
       howl = new Howl({
-        src: [
-          `assets/audio/sfx/${key}.webm`,
-          `assets/audio/sfx/${key}.mp3`,
-        ],
+        src: this._sfxSources(key),
         volume: this._volumes.sfx,
         preload: true,
       });
@@ -134,10 +134,36 @@ export class AudioSystem {
     Howler.stop();
     this._bed = this._layer = null;
     this._bedId = this._layerId = null;
+    this._voice = null;
     this._currentRegion = null;
   }
 
   // ── Internal ──────────────────────────────────────────────────────────
+
+  /** Play a voice line (one-shot, non-looping). Stops any previous voice. */
+  playVoice(src: string): void {
+    if (this._voice) {
+      this._voice.stop();
+      this._voice.unload();
+    }
+    this._voice = new Howl({
+      src: [src],
+      volume: this._volumes.sfx,
+      preload: true,
+    });
+    this._voice.play();
+  }
+
+  private _sfxSources(key: SfxKey): string[] {
+    // Sourced SFX assets override the default path convention
+    const overrides: Partial<Record<SfxKey, string[]>> = {
+      footstep_stone: ['assets/generated/audio/ambient/footstep_stone.wav'],
+    };
+    return overrides[key] ?? [
+      `assets/audio/sfx/${key}.webm`,
+      `assets/audio/sfx/${key}.mp3`,
+    ];
+  }
 
   private _crossfadeChannel(
     channel: 'bed' | 'layer',
@@ -179,6 +205,16 @@ export class AudioSystem {
   }
 
   private _ambientPath(region: AmbientKey, type: 'bed' | 'layer'): string[] {
+    // Ashfields uses sourced FreeSound assets in the generated directory
+    if (region === 'ashfields') {
+      const fileMap: Record<string, string> = {
+        bed:   'assets/generated/audio/ambient/wind_ashfields.wav',
+        layer: 'assets/generated/audio/ambient/distant_bell.wav',
+      };
+      const src = fileMap[type];
+      if (src) return [src];
+    }
+
     const base = `assets/audio/ambient/${region}_${type}`;
     return [`${base}.webm`, `${base}.mp3`];
   }

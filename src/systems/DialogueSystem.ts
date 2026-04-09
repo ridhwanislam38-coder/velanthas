@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { COLOR, FONT } from '../config/Constants';
+import { Audio } from './AudioSystem';
 import { Factions } from './FactionSystem';
 import type { FactionId } from '../config/enemyConfig';
 
@@ -16,7 +17,8 @@ import type { FactionId } from '../config/enemyConfig';
 export interface DialogueLine {
   speaker:   string;
   text:      string;
-  portrait?: string; // texture key
+  portrait?: string;  // texture key
+  voiceSrc?: string;  // path to voice-line audio (played via AudioSystem)
 }
 
 export interface DialogueChoice {
@@ -171,6 +173,11 @@ export class DialogueSystem {
       this._portrait.setTexture(line.portrait).setVisible(true);
     } else {
       this._portrait.setVisible(false);
+    }
+
+    // Play voice line if one is attached
+    if (line.voiceSrc) {
+      Audio.playVoice(line.voiceSrc);
     }
 
     this._typeEvent = this._scene.time.addEvent({

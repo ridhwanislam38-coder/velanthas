@@ -32,6 +32,18 @@ type DrawCtx = { ctx: CanvasRenderingContext2D; tex: Phaser.Textures.CanvasTextu
 export default class BootScene extends Phaser.Scene {
   constructor() { super({ key: 'BootScene' }); }
 
+  preload(): void {
+    // ── Ambient SFX (FreeSound) ──────────────────────────────────────────
+    this.load.audio('wind_ashfields',  'assets/generated/audio/ambient/wind_ashfields.wav');
+    this.load.audio('distant_bell',    'assets/generated/audio/ambient/distant_bell.wav');
+    this.load.audio('footstep_stone',  'assets/generated/audio/ambient/footstep_stone.wav');
+
+    // ── Voice lines (ElevenLabs) ─────────────────────────────────────────
+    this.load.audio('magistra_eon_01', 'assets/generated/audio/dialogue/magistra_eon_01.mp3');
+    this.load.audio('magistra_eon_02', 'assets/generated/audio/dialogue/magistra_eon_02.mp3');
+    this.load.audio('magistra_eon_03', 'assets/generated/audio/dialogue/magistra_eon_03.mp3');
+  }
+
   create(): void {
     this._genHero();
     this._genNPCs();

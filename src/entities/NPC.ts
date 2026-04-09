@@ -157,10 +157,12 @@ export const MAGISTRA_EON_TREE: DialogueTree = {
       {
         speaker: 'Magistra Eon',
         text: 'You felt it too, didn\'t you? The silence where the Accord used to be.',
+        voiceSrc: 'assets/generated/audio/dialogue/magistra_eon_01.mp3',
       },
       {
         speaker: 'Magistra Eon',
         text: 'I have studied it for thirty years. I still don\'t know what broke it.',
+        voiceSrc: 'assets/generated/audio/dialogue/magistra_eon_02.mp3',
       },
     ],
     choices: [
@@ -183,6 +185,7 @@ export const MAGISTRA_EON_TREE: DialogueTree = {
       {
         speaker: 'Magistra Eon',
         text: 'A pact between the old powers. It kept VELANTHAS breathing — barely.',
+        voiceSrc: 'assets/generated/audio/dialogue/magistra_eon_03.mp3',
       },
       {
         speaker: 'Magistra Eon',
