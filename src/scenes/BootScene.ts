@@ -95,9 +95,11 @@ export default class BootScene extends Phaser.Scene {
   }
 
   create(): void {
-    this._genPlayer();
-    this._genNPCs();
-    this._genEnemies();
+    // Only generate canvas fallbacks for textures NOT loaded from PNGs
+    // If hero_idle_0 PNG was loaded, skip ALL player canvas generation
+    if (!this.textures.exists('hero_idle_0')) this._genPlayer();
+    if (!this.textures.exists('npc_scholar'))  this._genNPCs();
+    if (!this.textures.exists('monster'))      this._genEnemies();
     this._genEffects();
     this._genUI();
     this._genBackgrounds();

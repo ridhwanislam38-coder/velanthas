@@ -22,12 +22,12 @@ import { generateMap, renderMap } from '../systems/ProceduralMapSystem';
 //   assets/audio/ambient/ashfields_layer.webm — FreeSound distant bells
 //   assets/audio/voice/magistra_eon_*.mp3 — ElevenLabs voice lines
 
-// ── World dimensions (stub — will come from LDtk map once authored) ─────
-const WORLD_W = 640;   // 20 tiles wide
-const WORLD_H = 480;   // 15 tiles tall
+// ── World dimensions — large enough for a full region ───────────────────
+const WORLD_W = 2560;  // 80 tiles wide — room for a city
+const WORLD_H = 1920;  // 60 tiles tall
 
 // ── Player movement (birds-eye, no gravity) ─────────────────────────────
-const MOVE_SPEED = 100; // px/s
+const MOVE_SPEED = 120; // px/s
 
 export default class AshfieldsScene extends BaseWorldScene {
   // Systems
@@ -130,7 +130,7 @@ export default class AshfieldsScene extends BaseWorldScene {
     // ── Player ────────────────────────────────────────────────────────
     this._player = this.physics.add.image(mapData.playerSpawn.x, mapData.playerSpawn.y, 'hero_idle_0');
     this._player.setDepth(DEPTH.GAME);
-    this._player.setScale(1.5);
+    // No scale — 32x32 sprite at native pixel resolution (like Triangle Strategy)
     this._player.setCollideWorldBounds(true);
     const body = this._player.body as Phaser.Physics.Arcade.Body;
     body.setDrag(600, 600);
@@ -139,8 +139,7 @@ export default class AshfieldsScene extends BaseWorldScene {
     this.addYSortable(this._player);
     this.followTarget(this._player);
 
-    // ── Camera zoom for better readability ─────────────────────────────
-    this.cameras.main.setZoom(1.5);
+    // No zoom — 320x180 internal res shows a wide view of the world (HD-2D style)
 
     // ── Input ─────────────────────────────────────────────────────────
     Input.init(this);
