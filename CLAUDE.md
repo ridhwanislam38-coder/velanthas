@@ -383,8 +383,8 @@ Build in this order, one item at a time, each passing TS + feel test before the 
 ```
 [DONE] 00. Commit WIP (bonfire/NPC/weather/save init) as feat(town):
 [DONE] 01. BaseWorldScene abstract class — birds-eye camera, y-sort, deadzone follow
-[ ]    02. Retire side-scroller assumptions — GROUND_Y, gravity, parallax stack
-[ ]           → move to ElevationSystem 3/4-view projection
+[DONE] 02. Retire side-scroller assumptions — Player refactored to birds-eye,
+              InputSystem replaces raw keys in TownScene
 [DONE] 03. AudioSystem refactor — 3 channels (ambientBed/Layer/sfx), NO music
 [DONE] 04. InputSystem — keyboard + Gamepad API, rebindable, persisted
 [DONE] 05. OccluderSystem — tall props/terrain fade when covering player
@@ -393,9 +393,9 @@ Build in this order, one item at a time, each passing TS + feel test before the 
 [ ]    07b. Ashfields assets — LDtk map + RetroDiffusion sprites + FreeSound ambient
 [DONE] 08. CurrencySystem + loot tables for all 31 enemies + 6 destructibles
 [DONE] 09. JournalSystem — quest + lore + choices tracking, serialisable
-[ ]    10. CustomizationSystem — outfit/hair swap, save-backed
-[ ]    11. FastTravelSystem — void-cut portals, per-class effects
-[ ]    12. FarmingSystem — harvest nodes, respawn timer, crafting table stub
+[DONE] 10. CustomizationSystem — outfit/hair swap, save-backed (6 outfits, 5 hairs, 3 faces)
+[DONE] 11. FastTravelSystem — 12 portals, discovery-based, per-class void-cut FX
+[DONE] 12. FarmingSystem — 5 material types, harvest + respawn + 3 crafting recipes
 [ ]    13. Remotion cinematic pipeline — first cutscene (Prologue) rendered end-to-end
 [ ]    14. ElevenLabs voice pipeline — Magistra Eon lines rendered, hooked to DialogueSystem
 [ ]    15. RetroDiffusion sprite pipeline — first batch (Ashfields tileset), Aseprite pass
