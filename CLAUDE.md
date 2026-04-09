@@ -389,17 +389,18 @@ Build in this order, one item at a time, each passing TS + feel test before the 
 [DONE] 04. InputSystem — keyboard + Gamepad API, rebindable, persisted
 [DONE] 05. OccluderSystem — tall props/terrain fade when covering player
 [DONE] 06. PostFXSystem — bloom, DoF, motion blur, chromatic aberration
-[DONE] 07a. Ashfields scene scaffold (code-only, awaiting AI tool assets)
-[ ]    07b. Ashfields assets — LDtk map + RetroDiffusion sprites + FreeSound ambient
+[DONE] 07a. Ashfields scene scaffold (code-only, systems wired)
+[DONE] 07b. Ashfields audio assets — FreeSound ambient (wind, bell, footstep) + ElevenLabs voice
+[ ]    07c. Ashfields visual assets — LDtk map + RetroDiffusion sprites (needs API key)
 [DONE] 08. CurrencySystem + loot tables for all 31 enemies + 6 destructibles
 [DONE] 09. JournalSystem — quest + lore + choices tracking, serialisable
 [DONE] 10. CustomizationSystem — outfit/hair swap, save-backed (6 outfits, 5 hairs, 3 faces)
 [DONE] 11. FastTravelSystem — 12 portals, discovery-based, per-class void-cut FX
 [DONE] 12. FarmingSystem — 5 material types, harvest + respawn + 3 crafting recipes
 [ ]    13. Remotion cinematic pipeline — first cutscene (Prologue) rendered end-to-end
-[ ]    14. ElevenLabs voice pipeline — Magistra Eon lines rendered, hooked to DialogueSystem
-[ ]    15. RetroDiffusion sprite pipeline — first batch (Ashfields tileset), Aseprite pass
-[ ]    16. Second region: Verdenmere, copying Ashfields pattern
+[DONE] 14. ElevenLabs voice pipeline — Magistra Eon (Sarah) + Grimdar (Harry) + Narrator (Alice), wired to DialogueSystem
+[ ]    15. RetroDiffusion sprite pipeline — needs API key
+[DONE] 16. VerdenmereScene scaffold — bioluminescent forest, 15 fireflies, 6 occluder trees
 ```
 
 After each item:
