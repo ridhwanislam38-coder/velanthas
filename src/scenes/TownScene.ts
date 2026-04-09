@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Player }               from '../entities/Player';
+import { NPC, MAGISTRA_EON_TREE } from '../entities/NPC';
 import { GuardEnemy }           from '../entities/enemies/GuardEnemy';
 import { JuiceSystem }          from '../systems/JuiceSystem';
 import { LightingSystem }       from '../systems/LightingSystem';
@@ -7,12 +8,15 @@ import { SkySystem }            from '../systems/SkySystem';
 import type { SkyRegion }       from '../systems/SkySystem';
 import { CinematicSystem }      from '../systems/CinematicSystem';
 import { SpecialAttackSystem }  from '../systems/SpecialAttackSystem';
+import { WeatherSystem }        from '../systems/WeatherSystem';
+import { SaveSystem }           from '../systems/SaveSystem';
 import { Bus, GameEvent }       from '../systems/EventBus';
 import { HealthBar }            from '../ui/HealthBar';
 import { APDisplay }            from '../ui/APDisplay';
 import {
   W, H, GROUND_Y, TOWN_W, COLOR, FONT,
 } from '../config/Constants';
+import { DEPTH } from '../config/visualConfig';
 
 // ── TownScene — Combat test arena ────────────────────────────────────────────
 // Systems integration: Sky → Lighting → Cinematic → Specials
@@ -29,6 +33,16 @@ export default class TownScene extends Phaser.Scene {
   private _sky!:      SkySystem;
   private _cin!:      CinematicSystem;
   private _specials!: SpecialAttackSystem;
+  private _weather!:  WeatherSystem;
+  private _save!:     SaveSystem;
+
+  // ── NPC
+  private _magistra!: NPC;
+
+  // ── Bonfire
+  private _bonfireX = 100;
+  private _bonfireY = GROUND_Y - 8;
+  private _bonfireReady = true; // cooldown prevents spam
 
   // ── Physics
   private _ground!: Phaser.Physics.Arcade.StaticGroup;
@@ -79,6 +93,34 @@ export default class TownScene extends Phaser.Scene {
     this._cin      = new CinematicSystem(this);
     this._specials = new SpecialAttackSystem(this, this._cin, this._player.ap, this._juice);
     this._player.setSpecials(this._specials);
+
+    // ── Weather ────────────────────────────────────────────────────────
+    this._weather = new WeatherSystem(this, 'ASHFIELDS', 'autumn');
+
+    // ── Save ───────────────────────────────────────────────────────────
+    this._save = new SaveSystem();
+    this._save.init({
+      name: 'Wanderer', level: 1, xp: 0, xpToNext: 120,
+      hp: 100, maxHp: 100, atk: 10, currency: 0,
+      combo: 0, breakCount: 0,
+      totalDamage: 0, maxCombo: 0,
+    });
+
+    // ── Bonfire ────────────────────────────────────────────────────────
+    this._buildBonfire();
+
+    // ── Magistra Eon NPC ───────────────────────────────────────────────
+    this._magistra = new NPC(this, {
+      id:           'magistra_eon',
+      name:         'Magistra Eon',
+      x:            180,
+      y:            GROUND_Y - 10,
+      textureKey:   'npc_scholar',
+      dialogueTree: MAGISTRA_EON_TREE,
+      startNode:    'intro',
+      patrolX:      [140, 210],
+    });
+    this.physics.add.collider(this._magistra.sprite, this._ground);
 
     // ── Route HIT_SPECIAL → enemy.receiveHit ──────────────────────────
     Bus.on(GameEvent.HIT_SPECIAL, (data: unknown) => {
@@ -165,6 +207,7 @@ export default class TownScene extends Phaser.Scene {
       Bus.clear(GameEvent.HIT_SPECIAL);
       this._sky.destroy();
       this._lighting.destroy();
+      this._magistra.destroy();
     });
 
     this.events.on('player_dead', () => {
@@ -190,8 +233,23 @@ export default class TownScene extends Phaser.Scene {
     const cam        = this.cameras.main;
     const liveEnemies = this._enemies.filter(e => !e.isDead);
 
-    // ── Sky parallax (before physics tick) ────────────────────────────
+    // ── Sky + Weather ─────────────────────────────────────────────────
     this._sky.update(delta, cam.scrollX, false); // daytime — no stars
+    this._weather.update(delta);
+
+    // ── NPC ────────────────────────────────────────────────────────────
+    const zPressed = Phaser.Input.Keyboard.JustDown(this._keys['Z']!);
+    this._magistra.update(this._player.x, this._player.y, zPressed);
+    if (this._magistra.isInDialogue && zPressed) this._magistra.advance();
+
+    // ── Bonfire proximity ─────────────────────────────────────────────
+    const bDist = Math.abs(this._player.x - this._bonfireX);
+    if (bDist < 20 && zPressed && !this._magistra.isInDialogue && this._bonfireReady) {
+      this._bonfireReady = false;
+      Bus.emit(GameEvent.BONFIRE_REST, {});
+      this.cameras.main.flash(300, 255, 220, 150);
+      this.time.delayedCall(3000, () => { this._bonfireReady = true; });
+    }
 
     // ── Combat ────────────────────────────────────────────────────────
     this._juice.updateHitStop();
@@ -247,6 +305,41 @@ export default class TownScene extends Phaser.Scene {
     });
     bar.attachTo(enemy.sprite, -22);
     this._enemyBars.set(enemy, bar);
+  }
+
+  private _buildBonfire(): void {
+    // Base glow (warm amber)
+    this.add.rectangle(this._bonfireX, this._bonfireY + 4, 10, 6, 0x3a1a04)
+      .setDepth(DEPTH.GAME - 1);
+    const flame = this.add.rectangle(this._bonfireX, this._bonfireY, 6, 8, 0xff8800)
+      .setDepth(DEPTH.GAME);
+
+    // Flicker tween
+    this.tweens.add({
+      targets:  flame,
+      scaleX:   { from: 1, to: 0.7 },
+      scaleY:   { from: 1, to: 1.2 },
+      alpha:    { from: 1, to: 0.8 },
+      duration: 120,
+      yoyo:     true,
+      repeat:   -1,
+      ease:     'Sine.easeInOut',
+    });
+
+    // "Z: rest" label
+    this.add.text(this._bonfireX, this._bonfireY - 12, 'Z: rest', {
+      fontFamily: "'Press Start 2P'",
+      fontSize:   FONT.XS,
+      color:      '#ff8800',
+    }).setOrigin(0.5).setDepth(400);
+
+    // Light source
+    this._lighting.addLight({
+      id: 'bonfire', x: this._bonfireX, y: this._bonfireY,
+      radius: 60, color: 0xff8800, intensity: 0.7,
+      flicker: { amplitude: 0.15, frequency: 3 },
+      _tex: null as never, _phase: 0,
+    });
   }
 
   private _buildGround(): void {

@@ -187,10 +187,11 @@ export default class BootScene extends Phaser.Scene {
     this._npcGeneric('npc_cloaked', C.CLOAK,   C.HOOD,   false);
     this._npcGeneric('npc_scholar', C.ROBE_D,  C.ROBE_L, false);
     // portraits (24×32) for dialogue
-    this._portrait('portrait_verso',   C.ROBE_D, C.SCROLL);
-    this._portrait('portrait_lune',    C.CLOAK,  C.MAG_C);
-    this._portrait('portrait_six',     C.MATH_B, '#f0d080');
+    this._portrait('portrait_verso',    C.ROBE_D,  C.SCROLL);
+    this._portrait('portrait_lune',    C.CLOAK,   C.MAG_C);
+    this._portrait('portrait_six',     C.MATH_B,  '#f0d080');
     this._portrait('portrait_brant',   C.GUARD_A, C.GUARD_T);
+    this._portrait('portrait_magistra', C.HIS_B,  '#d4b483');
   }
 
   private _npcVerso(): void {
