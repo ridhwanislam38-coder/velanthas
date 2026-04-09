@@ -381,13 +381,13 @@ All foundational systems shipped. Code is camera-agnostic except the scene layer
 Build in this order, one item at a time, each passing TS + feel test before the next.
 
 ```
-[NEXT] 00. Commit WIP (bonfire/NPC/weather/save init) as feat(town):
-[ ]    01. BaseWorldScene abstract class — birds-eye camera, y-sort, deadzone follow
+[DONE] 00. Commit WIP (bonfire/NPC/weather/save init) as feat(town):
+[DONE] 01. BaseWorldScene abstract class — birds-eye camera, y-sort, deadzone follow
 [ ]    02. Retire side-scroller assumptions — GROUND_Y, gravity, parallax stack
 [ ]           → move to ElevationSystem 3/4-view projection
-[ ]    03. AudioSystem refactor — 3 channels (ambientBed/Layer/sfx), NO music
-[ ]    04. InputSystem — keyboard + Gamepad API, rebindable, persisted
-[ ]    05. OccluderSystem — tall props/terrain fade when covering player
+[DONE] 03. AudioSystem refactor — 3 channels (ambientBed/Layer/sfx), NO music
+[DONE] 04. InputSystem — keyboard + Gamepad API, rebindable, persisted
+[NEXT] 05. OccluderSystem — tall props/terrain fade when covering player
 [ ]    06. PostFXSystem — bloom, DoF, motion blur, chromatic aberration
 [ ]    07. Ashfields region scene (first real map, LDtk) — 6 enemies, 1 bonfire,
 [ ]         1 NPC with quest, ambient soundscape, 3 destructibles, 1 secret
