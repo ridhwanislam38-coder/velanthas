@@ -6,7 +6,11 @@ import PrologueScene  from '../scenes/PrologueScene';
 import TownScene      from '../scenes/TownScene';
 import DungeonScene   from '../scenes/DungeonScene';
 import AshfieldsScene  from '../scenes/AshfieldsScene';
-import VerdenmereScene from '../scenes/VerdenmereScene';
+import VerdenmereScene  from '../scenes/VerdenmereScene';
+import GreyveilScene    from '../scenes/GreyveilScene';
+import GildspireScene   from '../scenes/GildspireScene';
+import VoidmarshScene   from '../scenes/VoidmarshScene';
+import UnnamedCityScene from '../scenes/UnnamedCityScene';
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -33,5 +37,9 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     DungeonScene,
     AshfieldsScene,
     VerdenmereScene,
+    GreyveilScene,
+    GildspireScene,
+    VoidmarshScene,
+    UnnamedCityScene,
   ],
 };
