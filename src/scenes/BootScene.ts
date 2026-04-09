@@ -17,10 +17,10 @@ export default class BootScene extends Phaser.Scene {
       console.log(`[BootScene] Loaded: ${key}`);
     });
 
-    // ── Player sprites (PixelLab) ──────────────────────────────────────
-    this.load.image('hero_idle_0',  'assets/sprites/characters/player_idle_front.png');
+    // ── Player sprites (PixelLab — isometric 3/4 view) ────────────────
+    this.load.image('hero_idle_0',  'assets/sprites/characters/player_iso_idle.png');
     this.load.image('hero_idle_1',  'assets/sprites/characters/player_idle_front.png'); // same for now
-    this.load.image('hero_walk_0',  'assets/sprites/characters/player_walk_front.png');
+    this.load.image('hero_walk_0',  'assets/sprites/characters/player_iso_walk.png');
     this.load.image('hero_walk_1',  'assets/sprites/characters/player_walk_front.png');
     this.load.image('hero_walk_2',  'assets/sprites/characters/player_walk_front.png');
     this.load.image('hero_walk_3',  'assets/sprites/characters/player_walk_front.png');
@@ -50,7 +50,7 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('env_ember_pool',  'assets/tiles/environments/ember_pool.png');
 
     // ── Multi-area backgrounds (Ashfields) ──────────────────────────────
-    this.load.image('ashfields_hub',    'assets/areas/ashfields/town_square_2.jpg');
+    this.load.image('ashfields_hub',    'assets/areas/ashfields/square_2.jpg');
     this.load.image('ashfields_street', 'assets/areas/ashfields/street_1.jpg');
     this.load.image('ashfields_tavern', 'assets/areas/ashfields/tavern_3.jpg');
     this.load.image('ashfields_market', 'assets/areas/ashfields/square_2.jpg');

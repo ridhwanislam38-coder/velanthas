@@ -40,10 +40,10 @@ export const AREA_CONFIGS: Record<string, AreaConfig> = {
     id: 'ashfields_hub',
     name: 'Ashfields — Town Square',
     background: 'ashfields_hub',
-    imagePath: 'assets/areas/ashfields/town_square_2.jpg',
+    imagePath: 'assets/areas/ashfields/square_2.jpg',  // more open ground, less rooftop
     worldW: WORLD,
     worldH: WORLD,
-    playerSpawn: { x: 240, y: 390 },  // open cobblestone courtyard
+    playerSpawn: { x: 240, y: 310 },  // center of open courtyard
     transitions: [
       {
         // Bottom-center → street
