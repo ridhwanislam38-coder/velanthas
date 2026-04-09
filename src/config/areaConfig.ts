@@ -43,7 +43,7 @@ export const AREA_CONFIGS: Record<string, AreaConfig> = {
     imagePath: 'assets/areas/ashfields/town_square_2.jpg',
     worldW: WORLD,
     worldH: WORLD,
-    playerSpawn: { x: 240, y: 260 },
+    playerSpawn: { x: 240, y: 340 },  // courtyard area (lower center of image)
     transitions: [
       {
         // Bottom-center → street
@@ -95,7 +95,7 @@ export const AREA_CONFIGS: Record<string, AreaConfig> = {
     imagePath: 'assets/areas/ashfields/tavern_3.jpg',
     worldW: WORLD,
     worldH: WORLD,
-    playerSpawn: { x: 240, y: 260 },
+    playerSpawn: { x: 240, y: 350 },  // floor area between tables
     transitions: [
       {
         // Bottom-center → back to hub
