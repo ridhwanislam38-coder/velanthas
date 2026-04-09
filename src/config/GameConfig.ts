@@ -5,7 +5,7 @@ import TitleScene     from '../scenes/TitleScene';
 import PrologueScene  from '../scenes/PrologueScene';
 import TownScene      from '../scenes/TownScene';
 import DungeonScene   from '../scenes/DungeonScene';
-import AshfieldsScene  from '../scenes/AshfieldsScene';
+import AreaScene        from '../scenes/AreaScene';
 import VerdenmereScene  from '../scenes/VerdenmereScene';
 import GreyveilScene    from '../scenes/GreyveilScene';
 import GildspireScene   from '../scenes/GildspireScene';
@@ -36,7 +36,7 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     PrologueScene,
     TownScene,
     DungeonScene,
-    AshfieldsScene,
+    AreaScene,
     VerdenmereScene,
     GreyveilScene,
     GildspireScene,

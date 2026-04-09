@@ -49,6 +49,12 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('env_broken_pillar','assets/tiles/environments/broken_pillar.png');
     this.load.image('env_ember_pool',  'assets/tiles/environments/ember_pool.png');
 
+    // ── Multi-area backgrounds (Ashfields) ──────────────────────────────
+    this.load.image('ashfields_hub',    'assets/areas/ashfields/town_square_2.jpg');
+    this.load.image('ashfields_street', 'assets/areas/ashfields/street_1.jpg');
+    this.load.image('ashfields_tavern', 'assets/areas/ashfields/tavern_3.jpg');
+    this.load.image('ashfields_market', 'assets/areas/ashfields/square_2.jpg');
+
     // ── HD-2D Region backgrounds (Leonardo AI) ─────────────────────────
     this.load.image('ashfields_hub_1',  'assets/tiles/environments/ashfields_hub_1.jpg');
     this.load.image('ashfields_hub_2',  'assets/tiles/environments/ashfields_hub_2.jpg');

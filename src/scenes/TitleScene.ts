@@ -127,7 +127,7 @@ export default class TitleScene extends Phaser.Scene {
       this._started = true;
       this.cameras.main.fadeOut(800, 4, 4, 8);
       this.cameras.main.once('camerafadeoutcomplete', () => {
-        this.scene.start('AshfieldsScene');
+        this.scene.start('AreaScene', { areaId: 'ashfields_hub' });
       });
     };
 

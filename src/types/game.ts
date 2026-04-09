@@ -26,7 +26,7 @@ export type SceneKey =
   | 'PrologueScene'
   | 'TownScene'
   | 'DungeonScene'
-  | 'AshfieldsScene'
+  | 'AreaScene'
   | 'VerdenmereScene'
   | 'GreyveilScene'
   | 'GildspireScene'
