@@ -89,6 +89,25 @@ export default class AshfieldsScene extends BaseWorldScene {
       this._occluder.addOccluder(occ);
     }
 
+    // ── Death handling ─────────────────────────────────────────────────
+    Bus.on(GameEvent.PLAYER_DEATH, () => {
+      // "YOU DIED" text
+      const died = this.add.text(W / 2, H / 2, 'YOU DIED', {
+        fontFamily: "'Press Start 2P'", fontSize: '14px',
+        color: '#8a2a1a', stroke: '#0a0a0e', strokeThickness: 3,
+      }).setOrigin(0.5).setAlpha(0).setScrollFactor(0).setDepth(500);
+
+      this.tweens.add({
+        targets: died, alpha: 1, duration: 1500, hold: 2000,
+        onComplete: () => {
+          this.cameras.main.fadeOut(1000, 0, 0, 0);
+          this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.restart();
+          });
+        },
+      });
+    });
+
     // ── Cleanup ───────────────────────────────────────────────────────
     this.events.once('shutdown', () => {
       this.shutdown();
