@@ -58,6 +58,21 @@ export default class BootScene extends Phaser.Scene {
   constructor() { super({ key: 'BootScene' }); }
 
   preload(): void {
+    // ── AI-generated sprites (PixelLab) ────────────────────────────────
+    this.load.image('hero_idle_0',  'assets/sprites/characters/player_idle_front.png');
+    this.load.image('hero_walk_0',  'assets/sprites/characters/player_walk_front.png');
+    this.load.image('hero_atk_0',   'assets/sprites/characters/player_attack.png');
+    this.load.image('monster',      'assets/sprites/enemies/guard_enemy.png');
+    this.load.image('npc_scholar',  'assets/sprites/npcs/magistra_eon.png');
+    this.load.image('npc_merchant', 'assets/sprites/npcs/merchant_verso.png');
+    this.load.image('npc_elder',    'assets/sprites/npcs/elder_moss.png');
+    this.load.image('npc_child',    'assets/sprites/npcs/ori_child.png');
+    this.load.image('tile_ash_ground', 'assets/tiles/tilesets/ashfields_ground.png');
+    this.load.image('tile_ash_path',   'assets/tiles/tilesets/ashfields_path.png');
+    this.load.image('env_dead_tree',   'assets/tiles/environments/dead_tree.png');
+    this.load.image('env_ruin_wall',   'assets/tiles/environments/ruined_wall.png');
+    this.load.image('env_bonfire',     'assets/tiles/environments/bonfire.png');
+
     // ── Ambient SFX (FreeSound) ────────────────────────────────────────
     this.load.audio('wind_ashfields',  'assets/generated/audio/ambient/wind_ashfields.wav');
     this.load.audio('distant_bell',    'assets/generated/audio/ambient/distant_bell.wav');
