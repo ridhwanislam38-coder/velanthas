@@ -26,27 +26,26 @@ export default class AshfieldsScene extends BaseWorldScene {
   constructor() { super({ key: 'AshfieldsScene' }); }
 
   override create(): void {
-    // ── Get background image dimensions to set world size ─────────────
+    // ── World sized to fit the background image in game coordinates ────
+    // Background images are ~1024px. We display them scaled down to fit
+    // the 320x180 game world, then the player walks on top.
+    const WORLD_W = 640;
+    const WORLD_H = 640;
     const bgKey = this.textures.exists('ashfields_hub_2') ? 'ashfields_hub_2' : 'ashfields_hub_1';
-    const bgTex = this.textures.get(bgKey);
-    const bgFrame = bgTex.getSourceImage();
-    const bgW = bgFrame.width;
-    const bgH = bgFrame.height;
 
-    // World size = background image size (scaled to game resolution)
-    // The images are ~1024px, we display at native size so the world IS the image
     const config: WorldSceneConfig = {
-      worldWidth:  bgW,
-      worldHeight: bgH,
+      worldWidth:  WORLD_W,
+      worldHeight: WORLD_H,
     };
     super.create(config);
 
     // ── HD-2D Background — THE WORLD ──────────────────────────────────
-    this._bgImage = this.add.image(bgW / 2, bgH / 2, bgKey);
+    this._bgImage = this.add.image(WORLD_W / 2, WORLD_H / 2, bgKey);
+    this._bgImage.setDisplaySize(WORLD_W, WORLD_H);
     this._bgImage.setDepth(DEPTH.BG_PROPS);
 
     // ── Player ────────────────────────────────────────────────────────
-    this._player = this.physics.add.image(bgW / 2, bgH / 2, 'hero_idle_0');
+    this._player = this.physics.add.image(WORLD_W / 2, WORLD_H / 2, 'hero_idle_0');
     this._player.setDepth(DEPTH.GAME);
     this._player.setCollideWorldBounds(true);
     const body = this._player.body as Phaser.Physics.Arcade.Body;
@@ -81,7 +80,7 @@ export default class AshfieldsScene extends BaseWorldScene {
 
     // ── Death handling ────────────────────────────────────────────────
     Bus.on(GameEvent.PLAYER_DEATH, () => {
-      const died = this.add.text(bgW / 2, bgH / 2, 'YOU DIED', {
+      const died = this.add.text(W / 2, H / 2, 'YOU DIED', {
         fontFamily: "'Press Start 2P'", fontSize: '14px',
         color: '#8a2a1a', stroke: '#0a0a0e', strokeThickness: 3,
       }).setOrigin(0.5).setAlpha(0).setScrollFactor(0).setDepth(500);
