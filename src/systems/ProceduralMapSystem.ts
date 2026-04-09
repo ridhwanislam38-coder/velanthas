@@ -464,8 +464,8 @@ export function renderMap(
       obj.setOrigin(0.5, 1.0); // bottom-anchored for y-sort correctness
       occluders.push(obj as Phaser.GameObjects.Image);
     } else {
-      // Ground-level tiles
-      obj.setDepth(DEPTH.SKY + 1);
+      // Ground-level tiles — ABOVE background layers (BG_PROPS = 30)
+      obj.setDepth(DEPTH.BG_PROPS + 1);
     }
   }
 

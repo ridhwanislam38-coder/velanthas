@@ -76,9 +76,9 @@ export default class AshfieldsScene extends BaseWorldScene {
       bgMid.setAlpha(0.6);
     }
 
-    // Layer 2: Ground base color
+    // Layer 2: Ground base color — below map tiles but above parallax
     const groundBase = this.add.graphics();
-    groundBase.fillStyle(0x1a140e, 1);
+    groundBase.fillStyle(0x2a1e14, 1); // slightly lighter so tiles contrast
     groundBase.fillRect(0, 0, WORLD_W, WORLD_H);
     groundBase.setDepth(DEPTH.BG_PROPS);
 
