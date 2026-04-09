@@ -29,7 +29,7 @@ export default class AreaScene extends BaseWorldScene {
   private _walls!:     Phaser.Physics.Arcade.StaticGroup;
   private _transitioning = false;
   private _lastDirection = 'south';
-  private _walkTimer = 0;
+  // walk bob removed — caused camera vibration. Waiting for God Mode AI sprite sheets.
   private _regionMap:  RegionMapOverlay | null = null;
   private _mKey:       Phaser.Input.Keyboard.Key | null = null;
   private _escKey:     Phaser.Input.Keyboard.Key | null = null;
@@ -100,8 +100,10 @@ export default class AreaScene extends BaseWorldScene {
       area.playerSpawn.y,
       'hero_idle_0',
     );
-    this._player.setScale(0.7);  // ~34px tall at 48px sprite = ~19% of 180px viewport
-    this._player.setDepth(area.playerSpawn.y); // y-sorted
+    this._player.setScale(1.0);  // full size — proper Triangle Strategy proportions
+    this._player.setAlpha(1.0);  // ALWAYS fully opaque
+    this._player.setBlendMode(Phaser.BlendModes.NORMAL);
+    this._player.setDepth(area.playerSpawn.y);
     this._player.setCollideWorldBounds(true);
     const body = this._player.body as Phaser.Physics.Arcade.Body;
     body.setDrag(800, 800);
@@ -174,7 +176,7 @@ export default class AreaScene extends BaseWorldScene {
 
     if (this._transitioning) return;
 
-    // ── 8-directional movement with walk animation ─────────────────
+    // ── Smooth movement — single sprite, NO bob, NO camera shake ────
     const body = this._player.body as Phaser.Physics.Arcade.Body;
     const mv = Input.moveVector();
     body.setVelocity(mv.x * MOVE_SPEED, mv.y * MOVE_SPEED);
@@ -182,33 +184,20 @@ export default class AreaScene extends BaseWorldScene {
     const moving = Math.abs(mv.x) > 0.1 || Math.abs(mv.y) > 0.1;
 
     if (moving) {
-      // Calculate 8-direction from movement vector
-      const angle = Math.atan2(mv.y, mv.x); // radians
-      const deg = ((angle * 180 / Math.PI) + 360) % 360;
-      // Map to 8 directions: 0=east, 45=south-east, 90=south, etc.
-      const dirs = ['east', 'south_east', 'south', 'south_west', 'west', 'north_west', 'north', 'north_east'];
-      const idx = Math.round(deg / 45) % 8;
-      this._lastDirection = dirs[idx] ?? 'south';
-      const dirKey = `hero_walk_${dirs[idx]}`;
-      if (this.textures.exists(dirKey)) {
-        this._player.setTexture(dirKey);
-      }
-      this._player.setFlipX(false); // rotation handles direction, no flip needed
-
-      // Walk bob — sine-wave vertical oscillation for liveliness
-      this._walkTimer += delta * 0.01;
-      this._player.y += Math.sin(this._walkTimer * 8) * 0.8;
-    } else {
-      // Idle — hold last facing direction
-      const idleDirKey = `hero_walk_${this._lastDirection}`;
-      if (this.textures.exists(idleDirKey)) {
-        this._player.setTexture(idleDirKey);
+      // Store last direction for idle
+      if (Math.abs(mv.x) > Math.abs(mv.y)) {
+        this._lastDirection = mv.x > 0 ? 'east' : 'west';
       } else {
-        this._player.setTexture('hero_idle_0');
+        this._lastDirection = mv.y > 0 ? 'south' : 'north';
       }
-      this._player.setFlipX(false);
-      this._walkTimer = 0;
+      // Use ONE sprite — just flip for east/west. No mismatched directions.
+      this._player.setTexture('hero_idle_0');
+      this._player.setFlipX(this._lastDirection === 'west' || this._lastDirection === 'north_west' || this._lastDirection === 'south_west');
     }
+    // On stop: hold last direction (don't change texture — already correct)
+
+    // Force alpha — NEVER transparent
+    this._player.setAlpha(1.0);
 
     // ── Transition zone check ────────────────────────────────────────
     const px = this._player.x;
