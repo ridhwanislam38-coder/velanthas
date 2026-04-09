@@ -184,17 +184,26 @@ export default class AreaScene extends BaseWorldScene {
     const moving = Math.abs(mv.x) > 0.1 || Math.abs(mv.y) > 0.1;
 
     if (moving) {
-      // Store last direction for idle
-      if (Math.abs(mv.x) > Math.abs(mv.y)) {
-        this._lastDirection = mv.x > 0 ? 'east' : 'west';
-      } else {
-        this._lastDirection = mv.y > 0 ? 'south' : 'north';
+      // 8-direction from movement angle
+      const angle = Math.atan2(mv.y, mv.x);
+      const deg = ((angle * 180 / Math.PI) + 360) % 360;
+      const dirs = ['east', 'south_east', 'south', 'south_west', 'west', 'north_west', 'north', 'north_east'];
+      const idx = Math.round(deg / 45) % 8;
+      this._lastDirection = dirs[idx] ?? 'south';
+
+      // Use proper 8-direction knight sprite
+      const dirKey = `hero_${this._lastDirection}`;
+      if (this.textures.exists(dirKey)) {
+        this._player.setTexture(dirKey);
       }
-      // Use ONE sprite — just flip for east/west. No mismatched directions.
-      this._player.setTexture('hero_idle_0');
-      this._player.setFlipX(this._lastDirection === 'west' || this._lastDirection === 'north_west' || this._lastDirection === 'south_west');
+      this._player.setFlipX(false);
+    } else {
+      // Hold last direction
+      const idleKey = `hero_${this._lastDirection}`;
+      if (this.textures.exists(idleKey)) {
+        this._player.setTexture(idleKey);
+      }
     }
-    // On stop: hold last direction (don't change texture — already correct)
 
     // Force alpha — NEVER transparent
     this._player.setAlpha(1.0);

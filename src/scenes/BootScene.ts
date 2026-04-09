@@ -18,20 +18,19 @@ export default class BootScene extends Phaser.Scene {
       console.log(`[BootScene] Loaded: ${key}`);
     });
 
-    // ── Player sprites (PixelLab — isometric 3/4 view, 4 directions) ──
-    this.load.image('hero_idle_0',  'assets/sprites/characters/player_iso_down_idle.png');
-    this.load.image('hero_down',    'assets/sprites/characters/player_iso_down.png');
-    this.load.image('hero_up',      'assets/sprites/characters/player_iso_up.png');
-    this.load.image('hero_right',   'assets/sprites/characters/player_iso_right.png');
-    this.load.image('hero_idle_1',  'assets/sprites/characters/player_idle_front.png'); // same for now
-    this.load.image('hero_walk_0',  'assets/sprites/characters/player_iso_walk.png');
-    this.load.image('hero_walk_1',  'assets/sprites/characters/player_walk_front.png');
-    this.load.image('hero_walk_2',  'assets/sprites/characters/player_walk_front.png');
-    this.load.image('hero_walk_3',  'assets/sprites/characters/player_walk_front.png');
-    this.load.image('hero_atk_0',   'assets/sprites/characters/player_attack.png');
-    this.load.image('hero_atk_1',   'assets/sprites/characters/player_attack.png');
-    this.load.image('hero_atk_2',   'assets/sprites/characters/player_attack.png');
-    this.load.image('hero_hurt',    'assets/sprites/characters/player_idle_front.png');
+    // ── Player sprites — Dark Knight (8 directional idles) ─────────────
+    this.load.image('hero_idle_0',     'assets/sprites/characters/knight/idle_south.png');
+    this.load.image('hero_south',      'assets/sprites/characters/knight/idle_south.png');
+    this.load.image('hero_north',      'assets/sprites/characters/knight/idle_north.png');
+    this.load.image('hero_east',       'assets/sprites/characters/knight/idle_east.png');
+    this.load.image('hero_west',       'assets/sprites/characters/knight/idle_west.png');
+    this.load.image('hero_south_east', 'assets/sprites/characters/knight/idle_south_east.png');
+    this.load.image('hero_south_west', 'assets/sprites/characters/knight/idle_south_west.png');
+    this.load.image('hero_north_east', 'assets/sprites/characters/knight/idle_north_east.png');
+    this.load.image('hero_north_west', 'assets/sprites/characters/knight/idle_north_west.png');
+    // Legacy keys — point to south for now
+    this.load.image('hero_atk_0',   'assets/sprites/characters/knight/idle_south.png');
+    this.load.image('hero_hurt',    'assets/sprites/characters/knight/idle_south.png');
 
     // ── 8-direction walk sprites (PixelLab) ──────────────────────────
     this.load.image('hero_walk_south',      'assets/sprites/characters/player_walk_south.png');
