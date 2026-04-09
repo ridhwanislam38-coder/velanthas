@@ -10,6 +10,7 @@ import { Input, InputAction }   from '../systems/InputSystem';
 import { Bus, GameEvent }       from '../systems/EventBus';
 import { DEPTH }                from '../config/visualConfig';
 import { W, H }                 from '../config/Constants';
+import { generateMap, renderMap } from '../systems/ProceduralMapSystem';
 
 // ── AshfieldsScene — first birds-eye region ─────────────────────────────────
 // Build-queue item 07. This is the template all future region scenes copy.
@@ -48,12 +49,12 @@ export default class AshfieldsScene extends BaseWorldScene {
     };
     super.create(config);
 
-    // ── Ground fill (placeholder until LDtk tilemap) ──────────────────
-    const bg = this.add.rectangle(WORLD_W / 2, WORLD_H / 2, WORLD_W, WORLD_H, 0x2a1a0e);
-    bg.setDepth(DEPTH.SKY);
+    // ── Procedural map generation ───────────────────────────────────────
+    const mapData = generateMap('ASHFIELDS', WORLD_W / 32, WORLD_H / 32, 32, 42);
+    const mapOccluders = renderMap(this, mapData);
 
     // ── Player ────────────────────────────────────────────────────────
-    this._player = this.physics.add.image(WORLD_W / 2, WORLD_H / 2, 'hero_idle_0');
+    this._player = this.physics.add.image(mapData.playerSpawn.x, mapData.playerSpawn.y, 'hero_idle_0');
     this._player.setDepth(DEPTH.GAME);
     this._player.setCollideWorldBounds(true);
     const body = this._player.body as Phaser.Physics.Arcade.Body;
@@ -83,8 +84,10 @@ export default class AshfieldsScene extends BaseWorldScene {
     // ── Region enter event ────────────────────────────────────────────
     Bus.emit(GameEvent.REGION_ENTER, { region: 'ASHFIELDS' });
 
-    // ── Placeholder occluders (will be replaced by LDtk objects) ─────
-    this._spawnPlaceholderOccluders();
+    // ── Register procedural map occluders ──────────────────────────────
+    for (const occ of mapOccluders) {
+      this._occluder.addOccluder(occ);
+    }
 
     // ── Cleanup ───────────────────────────────────────────────────────
     this.events.once('shutdown', () => {
@@ -121,22 +124,4 @@ export default class AshfieldsScene extends BaseWorldScene {
     this._lighting.update(delta);
   }
 
-  // ── Placeholder content ───────────────────────────────────────────────
-  // These will be replaced by LDtk-sourced objects in the asset pipeline pass.
-
-  private _spawnPlaceholderOccluders(): void {
-    // Fake rock formations
-    const positions = [
-      { x: 200, y: 150 },
-      { x: 400, y: 300 },
-      { x: 120, y: 380 },
-    ];
-
-    for (const pos of positions) {
-      const rock = this.add.rectangle(pos.x, pos.y, 48, 64, 0x3a2a1a);
-      rock.setOrigin(0.5, 1.0); // bottom-anchored for y-sort correctness
-      rock.setDepth(DEPTH.OCCLUDERS);
-      this._occluder.addOccluder(rock as unknown as Phaser.GameObjects.Image);
-    }
-  }
 }

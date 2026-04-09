@@ -198,6 +198,15 @@ export default class BootScene extends Phaser.Scene {
     this._npcGeneric('npc_merchant','#4a3020',  C.SPARK,  false);
     this._npcGeneric('npc_cloaked', C.CLOAK,   C.HOOD,   false);
     this._npcGeneric('npc_scholar', C.ROBE_D,  C.ROBE_L, false);
+    // Additional NPC types for quest + ambient NPCs
+    this._npcGeneric('npc_villager',C.SKIN,    '#7a6a4a', false);
+    this._npcGeneric('npc_child',   '#a0b0c0', '#e8e8f0', false);
+    this._npcGeneric('npc_knight',  C.GUARD_A, C.TRIM,   true);
+    this._npcGeneric('npc_bard',    '#4a6a2a', '#8ab44a', false);
+    this._npcGeneric('npc_hunter',  '#3a5a2a', '#6a8a3a', false);
+    this._npcGeneric('npc_hooded',  C.CLOAK,   C.VOID_A, false);
+    this._npcGeneric('npc_noble',   '#6a5a2a', C.SPARK,  false);
+    this._npcGeneric('npc_ghost',   '#c0c0d0', '#e8e8f0', false);
     // portraits (24×32) for dialogue
     this._portrait('portrait_verso',    C.ROBE_D,  C.SCROLL);
     this._portrait('portrait_lune',    C.CLOAK,   C.MAG_C);
