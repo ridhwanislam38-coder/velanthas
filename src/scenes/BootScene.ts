@@ -9,6 +9,14 @@ export default class BootScene extends Phaser.Scene {
   constructor() { super({ key: 'BootScene' }); }
 
   preload(): void {
+    // Debug: log any load failures
+    this.load.on('loaderror', (file: { key: string; src: string }) => {
+      console.error(`[BootScene] FAILED to load: ${file.key} from ${file.src}`);
+    });
+    this.load.on('filecomplete', (key: string) => {
+      console.log(`[BootScene] Loaded: ${key}`);
+    });
+
     // ── Player sprites (PixelLab) ──────────────────────────────────────
     this.load.image('hero_idle_0',  'assets/sprites/characters/player_idle_front.png');
     this.load.image('hero_idle_1',  'assets/sprites/characters/player_idle_front.png'); // same for now
