@@ -10,6 +10,7 @@ import { CinematicSystem }      from '../systems/CinematicSystem';
 import { SpecialAttackSystem }  from '../systems/SpecialAttackSystem';
 import { WeatherSystem }        from '../systems/WeatherSystem';
 import { SaveSystem }           from '../systems/SaveSystem';
+import { Input, InputAction }   from '../systems/InputSystem';
 import { Bus, GameEvent }       from '../systems/EventBus';
 import { HealthBar }            from '../ui/HealthBar';
 import { APDisplay }            from '../ui/APDisplay';
@@ -58,6 +59,9 @@ export default class TownScene extends Phaser.Scene {
   constructor() { super({ key: 'TownScene' }); }
 
   create(): void {
+    // ── Input ─────────────────────────────────────────────────────────
+    Input.init(this);
+
     // ── World bounds ───────────────────────────────────────────────────
     this.physics.world.setBounds(0, 0, TOWN_W, H);
     this.cameras.main.setBounds(0, 0, TOWN_W, H);
@@ -237,14 +241,17 @@ export default class TownScene extends Phaser.Scene {
     this._sky.update(delta, cam.scrollX, false); // daytime — no stars
     this._weather.update(delta);
 
+    // ── Input ─────────────────────────────────────────────────────────
+    Input.tick();
+    const interactPressed = Input.justDown(InputAction.INTERACT);
+
     // ── NPC ────────────────────────────────────────────────────────────
-    const zPressed = Phaser.Input.Keyboard.JustDown(this._keys['Z']!);
-    this._magistra.update(this._player.x, this._player.y, zPressed);
-    if (this._magistra.isInDialogue && zPressed) this._magistra.advance();
+    this._magistra.update(this._player.x, this._player.y, interactPressed);
+    if (this._magistra.isInDialogue && interactPressed) this._magistra.advance();
 
     // ── Bonfire proximity ─────────────────────────────────────────────
     const bDist = Math.abs(this._player.x - this._bonfireX);
-    if (bDist < 20 && zPressed && !this._magistra.isInDialogue && this._bonfireReady) {
+    if (bDist < 20 && interactPressed && !this._magistra.isInDialogue && this._bonfireReady) {
       this._bonfireReady = false;
       Bus.emit(GameEvent.BONFIRE_REST, {});
       this.cameras.main.flash(300, 255, 220, 150);
@@ -253,7 +260,7 @@ export default class TownScene extends Phaser.Scene {
 
     // ── Combat ────────────────────────────────────────────────────────
     this._juice.updateHitStop();
-    this._player.update(this._cursors, this._keys, delta, nowMs, liveEnemies);
+    this._player.update(delta, nowMs, liveEnemies);
 
     for (const enemy of liveEnemies) {
       enemy.update(delta, this._player);

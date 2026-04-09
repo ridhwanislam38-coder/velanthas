@@ -1,9 +1,6 @@
 import Phaser from 'phaser';
-import {
-  JUMP_VEL, RUN_SPEED, ACCEL, DECEL, MAX_FALL_SPEED,
-  COYOTE_FRAMES, JUMP_BUFFER_FRAMES, WALK_FRAME_MS,
-  GRAVITY, FAST_FALL_MULT, APEX_HANG_VY, APEX_GRAV_MULT, APEX_HANG_FRAMES,
-} from '../config/Constants';
+import { DEPTH } from '../config/visualConfig';
+import { Input, InputAction }   from '../systems/InputSystem';
 import { APSystem }             from '../systems/APSystem';
 import { ParrySystem }          from '../systems/ParrySystem';
 import { DodgeSystem }          from '../systems/DodgeSystem';
@@ -13,15 +10,21 @@ import {
   ComboTracker, checkHit, ATTACK_DATA, applyBlock,
   type AttackType, type FightStance,
 } from '../systems/CombatSystem';
+import { Bus, GameEvent } from '../systems/EventBus';
 import type { GuardEnemy } from './enemies/GuardEnemy';
+
+// ── Movement tuning (birds-eye — no gravity, no jump) ───────────────────
+const MOVE_SPEED  = 120;  // px/s
+const DRAG        = 800;  // px/s² deceleration when no input
+const WALK_FRAME_MS = 100;
 
 // ── Player animation states ────────────────────────────────────────────────
 export type PlayerAnimState =
-  | 'idle' | 'walk' | 'run' | 'jump' | 'fall' | 'land'
+  | 'idle' | 'walk' | 'run'
   | 'lightAtk' | 'heavyAtk' | 'finisher' | 'special1' | 'special3'
   | 'dodge' | 'block' | 'hit' | 'death';
 
-export type Facing = 'left' | 'right';
+export type Facing = 'left' | 'right' | 'up' | 'down';
 
 // ── Combat state machine ───────────────────────────────────────────────────
 type AttackState =
@@ -42,14 +45,8 @@ export class Player {
   private _specials: SpecialAttackSystem | null = null;
 
   // ── Movement state
-  private _facing: Facing = 'right';
+  private _facing: Facing = 'down';
   private _animState: PlayerAnimState = 'idle';
-  private _coyoteTimer   = 0;
-  private _jumpBuffer    = 0;
-  private _apexFrames    = 0;
-  private _fastFalling   = false;
-  private _wasOnGround   = false;
-  private _landFrame     = 0;  // frames since landing (for land animation)
   private _isBlocking    = false;
   private _isDead        = false;
 
@@ -69,11 +66,12 @@ export class Player {
 
   constructor(scene: Phaser.Scene, x: number, y: number, juice: JuiceSystem) {
     this.sprite = scene.physics.add.image(x, y, 'hero_idle_0');
-    this.sprite.setDepth(10);
+    this.sprite.setDepth(DEPTH.GAME);
     this.sprite.setCollideWorldBounds(true);
 
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;
-    body.setMaxVelocityY(MAX_FALL_SPEED);
+    body.setDrag(DRAG, DRAG);
+    body.setMaxVelocity(MOVE_SPEED, MOVE_SPEED);
 
     this.ap    = new APSystem();
     this.parry = new ParrySystem(this.ap);
@@ -98,214 +96,75 @@ export class Player {
   }
 
   // ── Main update ───────────────────────────────────────────────────────
-  update(
-    cursors: Phaser.Types.Input.Keyboard.CursorKeys,
-    keys: Record<string, Phaser.Input.Keyboard.Key>,
-    delta: number,
-    nowMs: number,
-    enemies: GuardEnemy[],
-  ): void {
+  update(delta: number, nowMs: number, enemies: GuardEnemy[]): void {
     if (this._isDead) return;
-
-    const body     = this.sprite.body as Phaser.Physics.Arcade.Body;
-    const onGround = body.blocked.down;
 
     // Pause everything during hit-stop
     if (this._juice.hitstopActive) {
-      this._updateAnimation(delta, onGround, body);
+      this._updateAnimation(delta);
       return;
     }
 
     this.parry.tick();
     this.dodge.update(delta);
     this.ap.update(delta);
-
-    this._updateCoyote(onGround);
-    this._updateJumpBuffer(cursors, keys);
-    this._updateFastFall(cursors, keys, body, onGround);
-    this._applyJump(body);
-    this._updateAttack(delta, nowMs, enemies, body);
+    this._updateAttack(delta, nowMs, enemies);
 
     // Movement blocked during certain states
     const canMove = this._atkState.tag === 'none' || this._atkState.tag === 'active';
     if (canMove && this._hitstunFrames <= 0) {
-      this._applyMovement(body, cursors, keys);
+      this._applyMovement();
     } else {
-      body.setAccelerationX(0);
-      if (!onGround) {
-        // Allow slight air drift deceleration
-        body.setVelocityX(body.velocity.x * 0.92);
-      } else {
-        body.setVelocityX(0);
-      }
+      const body = this.sprite.body as Phaser.Physics.Arcade.Body;
+      body.setAcceleration(0, 0);
     }
 
-    // Block
-    const blockKey = keys['Z'];
-    if (blockKey?.isDown && this._atkState.tag === 'none' && this._hitstunFrames <= 0) {
+    // Block (parry input)
+    if (Input.isDown(InputAction.PARRY) && this._atkState.tag === 'none' && this._hitstunFrames <= 0) {
       if (!this._isBlocking) { this._isBlocking = true; this.parry.activate(); }
     } else {
       if (this._isBlocking) { this._isBlocking = false; this.parry.deactivate(); }
     }
 
-    // Inputs for attacks
+    // Attack inputs
     if (this._atkState.tag === 'none' && this._hitstunFrames <= 0) {
-      this._readAttackInput(keys, nowMs, enemies);
+      this._readAttackInput(nowMs, enemies);
     }
 
     // Hitstun countdown
     if (this._hitstunFrames > 0) this._hitstunFrames--;
 
-    // Landing
-    const justLanded = onGround && !this._wasOnGround;
-    if (justLanded) {
-      this._landFrame = 0;
-      this._juice.shake(0.001, 80);
-    }
-    if (this._landFrame < 6) this._landFrame++;
-    this._wasOnGround = onGround;
-
-    this._updateAnimation(delta, onGround, body);
+    this._updateAnimation(delta);
   }
 
-  // ── Coyote time ───────────────────────────────────────────────────────
-  private _updateCoyote(onGround: boolean): void {
-    if (onGround) {
-      this._coyoteTimer = COYOTE_FRAMES;
-    } else {
-      this._coyoteTimer = Math.max(0, this._coyoteTimer - 1);
-    }
-  }
+  // ── Birds-eye movement ────────────────────────────────────────────────
+  private _applyMovement(): void {
+    const body = this.sprite.body as Phaser.Physics.Arcade.Body;
+    const mv = Input.moveVector();
 
-  // ── Jump buffer ───────────────────────────────────────────────────────
-  private _updateJumpBuffer(
-    cursors: Phaser.Types.Input.Keyboard.CursorKeys,
-    keys: Record<string, Phaser.Input.Keyboard.Key>,
-  ): void {
-    const pressed =
-      Phaser.Input.Keyboard.JustDown(cursors.up) ||
-      Phaser.Input.Keyboard.JustDown(cursors.space) ||
-      Phaser.Input.Keyboard.JustDown(keys['W'] ?? cursors.up);
+    if (Math.abs(mv.x) > 0.01 || Math.abs(mv.y) > 0.01) {
+      body.setVelocity(mv.x * MOVE_SPEED, mv.y * MOVE_SPEED);
 
-    if (pressed) this._jumpBuffer = JUMP_BUFFER_FRAMES;
-    else this._jumpBuffer = Math.max(0, this._jumpBuffer - 1);
-  }
-
-  // ── Fast fall + apex hang ─────────────────────────────────────────────
-  private _updateFastFall(
-    cursors: Phaser.Types.Input.Keyboard.CursorKeys,
-    keys: Record<string, Phaser.Input.Keyboard.Key>,
-    body: Phaser.Physics.Arcade.Body,
-    onGround: boolean,
-  ): void {
-    if (onGround) {
-      this._fastFalling = false;
-      this._apexFrames  = 0;
-      body.setGravityY(0); // reset to world gravity
-      return;
-    }
-
-    const jumpHeld =
-      cursors.up.isDown ||
-      cursors.space.isDown ||
-      (keys['W']?.isDown ?? false);
-
-    const vy = body.velocity.y;
-
-    // Fast fall: jump released while rising
-    if (!jumpHeld && vy < 0 && !this._fastFalling) {
-      this._fastFalling = true;
-    }
-
-    if (this._fastFalling) {
-      body.setGravityY(GRAVITY * (FAST_FALL_MULT - 1)); // additive on top of world gravity
-      this._apexFrames = 0;
-      return;
-    }
-
-    // Apex hang: near peak of arc
-    if (Math.abs(vy) < APEX_HANG_VY) {
-      this._apexFrames = Math.min(this._apexFrames + 1, APEX_HANG_FRAMES);
-      // Reduce gravity: set local gravity to compensate
-      const reduction = GRAVITY * (1 - APEX_GRAV_MULT);
-      body.setGravityY(-reduction); // negative additive = net reduction
-    } else {
-      this._apexFrames = 0;
-      body.setGravityY(0);
-    }
-  }
-
-  // ── Jump execution ────────────────────────────────────────────────────
-  private _applyJump(body: Phaser.Physics.Arcade.Body): void {
-    if (this._coyoteTimer > 0 && this._jumpBuffer > 0) {
-      body.setVelocityY(JUMP_VEL);
-      body.setGravityY(0);
-      this._coyoteTimer  = 0;
-      this._jumpBuffer   = 0;
-      this._fastFalling  = false;
-      this._apexFrames   = 0;
-    }
-  }
-
-  // ── Horizontal movement ───────────────────────────────────────────────
-  private _applyMovement(
-    body: Phaser.Physics.Arcade.Body,
-    cursors: Phaser.Types.Input.Keyboard.CursorKeys,
-    keys: Record<string, Phaser.Input.Keyboard.Key>,
-  ): void {
-    const left  = cursors.left.isDown  || (keys['A']?.isDown ?? false);
-    const right = cursors.right.isDown || (keys['D']?.isDown ?? false);
-
-    if (left && !right) {
-      body.setAccelerationX(-ACCEL);
-      body.setMaxVelocityX(RUN_SPEED);
-      // Skid: if was moving right, apply extra decel
-      if (body.velocity.x > 0) body.setVelocityX(body.velocity.x - DECEL * 0.016);
-      this.sprite.setFlipX(true);
-      this._facing = 'left';
-    } else if (right && !left) {
-      body.setAccelerationX(ACCEL);
-      body.setMaxVelocityX(RUN_SPEED);
-      if (body.velocity.x < 0) body.setVelocityX(body.velocity.x + DECEL * 0.016);
-      this.sprite.setFlipX(false);
-      this._facing = 'right';
-    } else {
-      // Decelerate
-      body.setAccelerationX(0);
-      const vx = body.velocity.x;
-      if (Math.abs(vx) < 4) {
-        body.setVelocityX(0);
+      // Update facing based on dominant axis
+      if (Math.abs(mv.x) > Math.abs(mv.y)) {
+        this._facing = mv.x < 0 ? 'left' : 'right';
+        this.sprite.setFlipX(mv.x < 0);
       } else {
-        body.setVelocityX(vx * 0.75); // ground friction
+        this._facing = mv.y < 0 ? 'up' : 'down';
       }
     }
+    // Drag handles deceleration when no input
   }
 
   // ── Attack input reading ──────────────────────────────────────────────
-  private _readAttackInput(
-    keys: Record<string, Phaser.Input.Keyboard.Key>,
-    nowMs: number,
-    enemies: GuardEnemy[],
-  ): void {
-    const lightKey  = keys['J'];
-    const heavyKey  = keys['K'];
-    const dodgeKey  = keys['L'];
-    // ── Specials: 7 total, one key each ───────────────────────────────
-    const sp1K = keys['U']; // JUDGMENT_MARK  (1AP)
-    const sp2K = keys['O']; // PHANTOM_STEP   (1AP)
-    const sp3K = keys['P']; // VOID_CRUCIBLE  (2AP)
-    const sp4K = keys['Q']; // THORNWALL_REQUIEM (2AP)
-    const sp5K = keys['I']; // THE_RECKONING  (3AP)
-    const sp6K = keys['E']; // SISTERS_ECHO   (3AP)
-    const sp7K = keys['R']; // WORLDS_WEIGHT  (3AP)
-
-    if (dodgeKey && Phaser.Input.Keyboard.JustDown(dodgeKey)) {
+  private _readAttackInput(nowMs: number, enemies: GuardEnemy[]): void {
+    if (Input.justDown(InputAction.DODGE)) {
       this.dodge.press();
       this._startAttack('dodge' as AttackType, nowMs);
       return;
     }
 
-    if (lightKey && Phaser.Input.Keyboard.JustDown(lightKey)) {
+    if (Input.justDown(InputAction.ATTACK_LIGHT)) {
       const free = this.dodge.consumeFreeLight();
       const type = free
         ? 'light'
@@ -314,25 +173,25 @@ export class Player {
       return;
     }
 
-    if (heavyKey && Phaser.Input.Keyboard.JustDown(heavyKey)) {
+    if (Input.justDown(InputAction.ATTACK_HEAVY)) {
       const type = this._combo.recordAttack('heavy', nowMs);
       this._startAttack(type, nowMs);
       return;
     }
 
     // Specials — routed through SpecialAttackSystem
-    const specialBindings: Array<[Phaser.Input.Keyboard.Key | undefined, SpecialId]> = [
-      [sp1K, 'JUDGMENT_MARK'],
-      [sp2K, 'PHANTOM_STEP'],
-      [sp3K, 'VOID_CRUCIBLE'],
-      [sp4K, 'THORNWALL_REQUIEM'],
-      [sp5K, 'THE_RECKONING'],
-      [sp6K, 'SISTERS_ECHO'],
-      [sp7K, 'WORLDS_WEIGHT'],
+    const specialActions: Array<[InputAction, SpecialId]> = [
+      [InputAction.SPECIAL_1, 'JUDGMENT_MARK'],
+      [InputAction.SPECIAL_2, 'PHANTOM_STEP'],
+      [InputAction.SPECIAL_3, 'VOID_CRUCIBLE'],
+      [InputAction.SPECIAL_4, 'THORNWALL_REQUIEM'],
+      [InputAction.SPECIAL_5, 'THE_RECKONING'],
+      [InputAction.SPECIAL_6, 'SISTERS_ECHO'],
+      [InputAction.SPECIAL_7, 'WORLDS_WEIGHT'],
     ];
 
-    for (const [key, id] of specialBindings) {
-      if (key && Phaser.Input.Keyboard.JustDown(key)) {
+    for (const [action, id] of specialActions) {
+      if (Input.justDown(action)) {
         if (this._specials && !this._specials.isActive) {
           const targets = enemies.filter(e => !e.isDead).map(e => e.sprite);
           this._specials.use(id, this.sprite.x, this.sprite.y, targets);
@@ -358,7 +217,6 @@ export class Player {
     _delta: number,
     nowMs: number,
     enemies: GuardEnemy[],
-    _body: Phaser.Physics.Arcade.Body,
   ): void {
     if (this._atkState.tag === 'none') return;
 
@@ -370,16 +228,11 @@ export class Player {
       if (s.frame >= data.startup) {
         this._atkState = { tag: 'active', type: s.type, frame: 0, hit: false };
       }
-      // Dodge cancel window
-      if (data.cancelAt > 0 && s.frame >= data.cancelAt) {
-        // Allow dodge cancel (DodgeSystem handles i-frames)
-      }
     } else if (s.tag === 'active') {
       if (!s.hit) {
-        // Check hit against each enemy
         const stance: FightStance = {
           x: this.sprite.x, y: this.sprite.y,
-          facing: this._facing,
+          facing: this._facing === 'left' || this._facing === 'right' ? this._facing : 'right',
           width: this.sprite.displayWidth,
           height: this.sprite.displayHeight,
         };
@@ -388,7 +241,6 @@ export class Player {
           if (result.connected) {
             s.hit = true;
             enemy.receiveHit(result, this);
-            // Juice
             if (s.type === 'light' || s.type === 'finisher') {
               this._juice.onLightHit([this.sprite, enemy.sprite]);
             } else if (s.type === 'heavy') {
@@ -416,37 +268,30 @@ export class Player {
   receiveHit(damage: number, knockback: number, hitstun: number): void {
     if (this._isDead) return;
 
-    // Check dodge i-frames
     const dodgeResult = this.dodge.resolveHit();
-    if (dodgeResult === 'perfect' || dodgeResult === 'dodge') {
-      return; // dodged
-    }
+    if (dodgeResult === 'perfect' || dodgeResult === 'dodge') return;
 
-    // Check parry
-    const atkData = ATTACK_DATA['light']; // placeholder — caller should pass AttackData
+    const atkData = ATTACK_DATA['light'];
     const parryResult = this.parry.resolveHit(atkData);
-    if (parryResult === 'perfect' || parryResult === 'parry') {
-      return; // parried
-    }
+    if (parryResult === 'perfect' || parryResult === 'parry') return;
 
-    // Block mitigation
     const finalDamage = this._isBlocking
-      ? Math.floor(damage * 0.15)   // 15% chip through block
+      ? Math.floor(damage * 0.15)
       : damage;
 
     this._hp = Math.max(0, this._hp - finalDamage);
     this._hitstunFrames = hitstun;
+    Bus.emit(GameEvent.HP_CHANGED, { hp: this._hp, maxHp: this._maxHp });
 
+    // Knockback in birds-eye: push away from attacker direction
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;
-    const kbDir = (knockback > 0) ? 1 : -1;
-    body.setVelocityX(knockback * (this._facing === 'right' ? -kbDir : kbDir));
+    const kbX = this._facing === 'left' ? knockback : -knockback;
+    body.setVelocityX(kbX);
 
     this._animState = 'hit';
     this.sprite.setTexture('hero_hurt');
 
-    if (this._hp <= 0) {
-      this._die();
-    }
+    if (this._hp <= 0) this._die();
   }
 
   private _die(): void {
@@ -457,15 +302,11 @@ export class Player {
     body.setVelocity(0, 0);
     body.setEnable(false);
     this.sprite.setTexture('hero_hurt');
-    // YOU DIED text handled by scene
+    Bus.emit(GameEvent.PLAYER_DEATH, {});
   }
 
   // ── Animation ─────────────────────────────────────────────────────────
-  private _updateAnimation(
-    delta: number,
-    onGround: boolean,
-    body: Phaser.Physics.Arcade.Body,
-  ): void {
+  private _updateAnimation(delta: number): void {
     if (this._animState === 'death' || this._animState === 'hit') return;
 
     // Attack animation
@@ -482,34 +323,16 @@ export class Player {
 
     // Block
     if (this._isBlocking) {
-      this.sprite.setTexture('hero_idle_0'); // no separate block frame yet
+      this.sprite.setTexture('hero_idle_0');
       this._animState = 'block';
       return;
     }
 
-    // Airborne
-    if (!onGround) {
-      const vy = body.velocity.y;
-      if (vy < 0) {
-        this.sprite.setTexture('hero_idle_0'); // jump up
-        this._animState = 'jump';
-      } else {
-        this.sprite.setTexture('hero_idle_1'); // falling
-        this._animState = 'fall';
-      }
-      return;
-    }
+    // Movement
+    const body = this.sprite.body as Phaser.Physics.Arcade.Body;
+    const speed = Math.sqrt(body.velocity.x ** 2 + body.velocity.y ** 2);
 
-    // Landing squash (first 6 frames after landing)
-    if (this._landFrame < 4) {
-      this.sprite.setTexture('hero_hurt'); // low-crouch reuse for now
-      this._animState = 'land';
-      return;
-    }
-
-    // Ground movement
-    const moving = Math.abs(body.velocity.x) > 8;
-    if (moving) {
+    if (speed > 8) {
       this._walkTimer += delta;
       if (this._walkTimer >= WALK_FRAME_MS) {
         this._walkTimer -= WALK_FRAME_MS;
@@ -518,14 +341,13 @@ export class Player {
       this.sprite.setTexture(`hero_walk_${this._walkFrame}`);
       this._animState = 'walk';
     } else {
-      // Idle breathing — 4-frame bob at 600ms total cycle
+      // Idle breathing
       this._idleTimer += delta;
       const idlePeriod = 600 / 4;
       if (this._idleTimer >= idlePeriod) {
         this._idleTimer -= idlePeriod;
         this._idleFrame = (this._idleFrame + 1) % 4;
       }
-      // idle_0/1 alternate; idle_2/3 back to 0/1 (creates breathe loop)
       const idleMap = [0, 1, 1, 0];
       const frameIdx = idleMap[this._idleFrame] ?? 0;
       this.sprite.setTexture(`hero_idle_${frameIdx}`);
@@ -547,10 +369,9 @@ export class Player {
   get stance(): FightStance {
     return {
       x: this.sprite.x, y: this.sprite.y,
-      facing: this._facing,
+      facing: this._facing === 'left' || this._facing === 'right' ? this._facing : 'right',
       width: this.sprite.displayWidth,
       height: this.sprite.displayHeight,
     };
   }
 }
-
