@@ -17,8 +17,11 @@ export default class BootScene extends Phaser.Scene {
       console.log(`[BootScene] Loaded: ${key}`);
     });
 
-    // ── Player sprites (PixelLab — isometric 3/4 view) ────────────────
-    this.load.image('hero_idle_0',  'assets/sprites/characters/player_iso_idle.png');
+    // ── Player sprites (PixelLab — isometric 3/4 view, 4 directions) ──
+    this.load.image('hero_idle_0',  'assets/sprites/characters/player_iso_down_idle.png');
+    this.load.image('hero_down',    'assets/sprites/characters/player_iso_down.png');
+    this.load.image('hero_up',      'assets/sprites/characters/player_iso_up.png');
+    this.load.image('hero_right',   'assets/sprites/characters/player_iso_right.png');
     this.load.image('hero_idle_1',  'assets/sprites/characters/player_idle_front.png'); // same for now
     this.load.image('hero_walk_0',  'assets/sprites/characters/player_iso_walk.png');
     this.load.image('hero_walk_1',  'assets/sprites/characters/player_walk_front.png');

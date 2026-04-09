@@ -57,16 +57,20 @@ export default class AreaScene extends BaseWorldScene {
     this._bgImage.setDisplaySize(area.worldW, area.worldH);
     this._bgImage.setDepth(5);
 
-    // ── Player ───────────────────────────────────────────────────────
+    // ── Player — small scale to match building proportions ─────────
     this._player = this.physics.add.image(
       area.playerSpawn.x,
       area.playerSpawn.y,
       'hero_idle_0',
     );
-    this._player.setDepth(DEPTH.GAME);
+    this._player.setScale(0.35);  // small relative to buildings, like Triangle Strategy
+    this._player.setDepth(area.playerSpawn.y); // y-sorted
     this._player.setCollideWorldBounds(true);
     const body = this._player.body as Phaser.Physics.Arcade.Body;
-    body.setDrag(600, 600);
+    body.setDrag(800, 800);
+    // Tighter bounds so player doesn't walk off edges into void
+    const margin = 20;
+    this.physics.world.setBounds(margin, margin, area.worldW - margin * 2, area.worldH - margin * 2);
 
     this.addYSortable(this._player);
     this.followTarget(this._player);
@@ -97,12 +101,39 @@ export default class AreaScene extends BaseWorldScene {
 
     if (this._transitioning) return;
 
-    // ── Player movement ──────────────────────────────────────────────
+    // ── 8-directional movement with walk animation ─────────────────
     const body = this._player.body as Phaser.Physics.Arcade.Body;
     const mv = Input.moveVector();
     body.setVelocity(mv.x * MOVE_SPEED, mv.y * MOVE_SPEED);
-    if (mv.x < -0.1) this._player.setFlipX(true);
-    else if (mv.x > 0.1) this._player.setFlipX(false);
+
+    const moving = Math.abs(mv.x) > 0.1 || Math.abs(mv.y) > 0.1;
+
+    if (moving) {
+      // Pick texture based on dominant direction
+      if (Math.abs(mv.x) > Math.abs(mv.y)) {
+        // Horizontal dominant — use right sprite, flip for left
+        if (this.textures.exists('hero_right')) {
+          this._player.setTexture('hero_right');
+        }
+        this._player.setFlipX(mv.x < 0);
+      } else if (mv.y < 0) {
+        // Moving up
+        if (this.textures.exists('hero_up')) {
+          this._player.setTexture('hero_up');
+        }
+        this._player.setFlipX(false);
+      } else {
+        // Moving down
+        if (this.textures.exists('hero_down')) {
+          this._player.setTexture('hero_down');
+        }
+        this._player.setFlipX(false);
+      }
+    } else {
+      // Idle
+      this._player.setTexture('hero_idle_0');
+      this._player.setFlipX(false);
+    }
 
     // ── Transition zone check ────────────────────────────────────────
     const px = this._player.x;
