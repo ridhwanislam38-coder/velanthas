@@ -1,4 +1,4 @@
-// ── Visual Config — Hollow Knight Standard ─────────────────────────────────
+// ── Visual Config — HD-2D Standard ──────────────────────────────────────────
 // Renderer layer order, parallax ratios, palette rules, performance caps.
 // All numbers here — never in scene files.
 
@@ -8,12 +8,15 @@ export const DEPTH = {
   BG_FAR:      10,     // layer 1 — distant background (slow parallax)
   BG_MID:      20,     // layer 2 — mid background (medium parallax)
   BG_PROPS:    30,     // layer 3 — background props (slight parallax)
-  GAME:        100,    // layer 4 — player, enemies, tiles
-  FG_SILHOUETTE: 200,  // layer 5 — foreground shapes in FRONT of player
+  GAME:        100,    // layer 4 — player, enemies, tiles (y-sorted 100–149)
+  GAME_MAX:    149,    // y-sort ceiling — nothing in GAME layer above this
+  OCCLUDERS:   150,    // layer 4.5 — terrain/props that alpha-fade over player
+  FG_NEAR:     200,    // layer 5 — foreground diorama pieces
   PARTICLES:   250,    // layer 6
-  LIGHTING:    300,    // layer 7 — multiply blend over 0-250
-  UI:          400,    // layer 8 — HUD, dialogue, etc. (unaffected by lighting)
-  CUTSCENE:    500,    // layer 9 — cutscene overlay
+  LIGHTING:    300,    // layer 7 — multiply blend over 0–250
+  POSTFX:      350,    // layer 7.5 — bloom, DoF, motion blur, chromatic
+  UI:          400,    // layer 8 — HUD, dialogue, journal (unaffected by lighting)
+  CUTSCENE:    500,    // layer 9 — Remotion playback overlays
   LETTERBOX:   600,    // topmost — cinematic bars
 } as const;
 
@@ -56,7 +59,7 @@ export const PIXEL = {
 export const SILHOUETTE = {
   ALPHA:    0.65,  // 65% opacity — player visible through it
   TINT:     0x000000,
-  DEPTH:    DEPTH.FG_SILHOUETTE,
+  DEPTH:    DEPTH.FG_NEAR,
 } as const;
 
 // ── Atmospheric perspective ───────────────────────────────────────────────
