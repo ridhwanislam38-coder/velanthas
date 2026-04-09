@@ -95,6 +95,19 @@ export const enum GameEvent {
   GAME_PAUSE            = 'game_pause',
   GAME_RESUME           = 'game_resume',
 
+  // Currency & Loot
+  CURRENCY_GAIN         = 'currency_gain',
+  CURRENCY_SPEND        = 'currency_spend',
+  ENEMY_KILLED          = 'enemy_killed',
+  DESTRUCT_BREAK        = 'destruct_break',
+
+  // Journal
+  QUEST_ADVANCE         = 'quest_advance',
+  LORE_FOUND            = 'lore_found',
+  CHOICE_MADE           = 'choice_made',
+  JOURNAL_OPEN          = 'journal_open',
+  JOURNAL_CLOSE         = 'journal_close',
+
   // Visual
   REVELATION_REFLECTION_START    = 'revelation_reflection_start',
   REVELATION_REFLECTION_COMPLETE = 'revelation_reflection_complete',
