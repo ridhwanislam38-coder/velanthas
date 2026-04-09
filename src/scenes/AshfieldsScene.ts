@@ -31,7 +31,8 @@ const MOVE_SPEED = 100; // px/s
 
 export default class AshfieldsScene extends BaseWorldScene {
   // Systems
-  private _lighting!: LightingSystem;
+  // Lighting disabled for outdoor daylight scenes
+  private _lighting: LightingSystem | null = null;
   private _sky!:      SkySystem;
   private _weather!:  WeatherSystem;
   private _occluder!: OccluderSystem;
@@ -70,13 +71,15 @@ export default class AshfieldsScene extends BaseWorldScene {
     // ── Systems ───────────────────────────────────────────────────────
     this._sky      = new SkySystem(this);
     this._sky.setRegion('ASHFIELDS', true);
-    this._lighting = new LightingSystem(this);
+    // Lighting disabled for outdoor daylight — no darkness overlay, no radial glow
+    // this._lighting = new LightingSystem(this);
     this._weather  = new WeatherSystem(this, 'ASHFIELDS', 'autumn');
     this._occluder = new OccluderSystem();
     this._occluder.setPlayer(this._player);
 
+    // PostFX: subtle only — no heavy bloom that washes out the scene
     this._postfx = new PostFXSystem();
-    this._postfx.init(this, { bloomEnabled: true, dofEnabled: true, dofRadius: 0.3, dofAmount: 0.8 });
+    this._postfx.init(this, { bloomEnabled: false, dofEnabled: false, dofRadius: 0, dofAmount: 0 });
 
     // ── Ambient audio ─────────────────────────────────────────────────
     Audio.crossfadeToRegion('ashfields');
@@ -112,7 +115,7 @@ export default class AshfieldsScene extends BaseWorldScene {
     this.events.once('shutdown', () => {
       this.shutdown();
       this._sky.destroy();
-      this._lighting.destroy();
+      this._lighting?.destroy();
       this._occluder.destroy();
       this._postfx.destroy();
       Audio.stopAll();
@@ -140,7 +143,7 @@ export default class AshfieldsScene extends BaseWorldScene {
     this._weather.update(delta);
     this._occluder.update();
     this._postfx.update(delta);
-    this._lighting.update(delta);
+    this._lighting?.update(delta);
   }
 
 }
