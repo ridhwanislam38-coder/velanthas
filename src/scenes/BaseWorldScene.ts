@@ -75,8 +75,8 @@ export abstract class BaseWorldScene extends Phaser.Scene {
   private _ySort(): void {
     for (const obj of this._ySortables) {
       const y = (obj as unknown as { y: number }).y;
-      // Clamp to 10–9998 so sprites stay between ground (5) and foreground (9999)
-      obj.setDepth(Math.max(10, Math.min(9998, Math.round(y))));
+      // Clamp to 20–9998 so sprites always stay above ground (5) even at low Y
+      obj.setDepth(Math.max(20, Math.min(9998, Math.round(y))));
     }
   }
 
