@@ -10,7 +10,8 @@ import VerdenmereScene  from '../scenes/VerdenmereScene';
 import GreyveilScene    from '../scenes/GreyveilScene';
 import GildspireScene   from '../scenes/GildspireScene';
 import VoidmarshScene   from '../scenes/VoidmarshScene';
-import UnnamedCityScene from '../scenes/UnnamedCityScene';
+import UnnamedCityScene   from '../scenes/UnnamedCityScene';
+import InterstitialScene  from '../scenes/InterstitialScene';
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -41,5 +42,6 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     GildspireScene,
     VoidmarshScene,
     UnnamedCityScene,
+    InterstitialScene,
   ],
 };
