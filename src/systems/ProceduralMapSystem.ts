@@ -412,7 +412,7 @@ function placeOnEdge(
 // ── Render helper ──────────────────────────────────────────────────────────
 
 /**
- * Renders a MapData into the scene using Phaser rectangles.
+ * Renders a MapData into the scene using sprites where available, rectangles as fallback.
  * Returns an array of occluder game objects for the OccluderSystem.
  */
 export function renderMap(
@@ -421,23 +421,51 @@ export function renderMap(
 ): Array<Phaser.GameObjects.Image | Phaser.GameObjects.Sprite> {
   const occluders: Array<Phaser.GameObjects.Image | Phaser.GameObjects.Sprite> = [];
 
+  /** Map terrain type → texture key for sprite rendering. */
+  const TILE_TEXTURES: Partial<Record<TerrainType, string>> = {
+    ground: 'tile_ash_ground',
+    path:   'tile_ash_path',
+    wall:   'env_ruin_wall',
+    prop:   'env_dead_tree',
+  };
+
   for (const tile of mapData.tiles) {
-    const rect = scene.add.rectangle(
-      tile.x,
-      tile.y,
-      mapData.tileSize,
-      mapData.tileSize,
-      tile.color,
-    );
+    const textureKey = TILE_TEXTURES[tile.type];
+    const hasTexture = textureKey != null && scene.textures.exists(textureKey);
+
+    let obj: Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle;
+
+    if (hasTexture) {
+      // Use real sprite
+      const img = scene.add.image(tile.x, tile.y, textureKey);
+      img.setDisplaySize(mapData.tileSize, mapData.tileSize);
+      obj = img;
+    } else if (tile.type === 'water') {
+      // Water — blue-tinted rectangle with slight transparency
+      const rect = scene.add.rectangle(
+        tile.x, tile.y,
+        mapData.tileSize, mapData.tileSize,
+        0x1a2a4a,
+      );
+      rect.setAlpha(0.75);
+      obj = rect;
+    } else {
+      // Fallback — colored rectangle (destructible or missing texture)
+      obj = scene.add.rectangle(
+        tile.x, tile.y,
+        mapData.tileSize, mapData.tileSize,
+        tile.color,
+      );
+    }
 
     if (tile.occluder) {
       // Walls / props sit above game layer
-      rect.setDepth(DEPTH.OCCLUDERS);
-      rect.setOrigin(0.5, 1.0); // bottom-anchored for y-sort correctness
-      occluders.push(rect as unknown as Phaser.GameObjects.Image);
+      obj.setDepth(DEPTH.OCCLUDERS);
+      obj.setOrigin(0.5, 1.0); // bottom-anchored for y-sort correctness
+      occluders.push(obj as Phaser.GameObjects.Image);
     } else {
       // Ground-level tiles
-      rect.setDepth(DEPTH.SKY + 1);
+      obj.setDepth(DEPTH.SKY + 1);
     }
   }
 

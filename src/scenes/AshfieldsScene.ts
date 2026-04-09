@@ -50,13 +50,62 @@ export default class AshfieldsScene extends BaseWorldScene {
     };
     super.create(config);
 
+    // ── Sky background fallback gradient ────────────────────────────────
+    const skyGrad = this.add.graphics();
+    skyGrad.fillGradientStyle(0x1a1520, 0x1a1520, 0x2a1a0e, 0x2a1a0e, 1);
+    skyGrad.fillRect(0, 0, WORLD_W, WORLD_H);
+    skyGrad.setDepth(0);
+    skyGrad.setScrollFactor(0.3); // slow parallax
+
     // ── Procedural map generation ───────────────────────────────────────
     const mapData = generateMap('ASHFIELDS', WORLD_W / 32, WORLD_H / 32, 32, 42);
     const mapOccluders = renderMap(this, mapData);
 
+    // ── Environmental props ────────────────────────────────────────────
+    // Bonfires near player spawn
+    const spawnX = mapData.playerSpawn.x;
+    const spawnY = mapData.playerSpawn.y;
+    const bonfireOffsets = [
+      { dx: -48, dy: -32 }, { dx: 56, dy: 16 }, { dx: -24, dy: 48 },
+      { dx: 64, dy: -40 }, { dx: 0, dy: 64 },
+    ];
+    for (const off of bonfireOffsets) {
+      if (this.textures.exists('env_bonfire')) {
+        const bf = this.add.image(spawnX + off.dx, spawnY + off.dy, 'env_bonfire');
+        bf.setDepth(DEPTH.GAME);
+      }
+    }
+    // Dead trees along map edges
+    const treePositions = [
+      { x: 32, y: 48 }, { x: 96, y: 32 }, { x: WORLD_W - 48, y: 64 },
+      { x: WORLD_W - 80, y: WORLD_H - 48 }, { x: 48, y: WORLD_H - 32 },
+      { x: WORLD_W / 2 - 80, y: 40 }, { x: WORLD_W / 2 + 100, y: WORLD_H - 40 },
+      { x: 64, y: WORLD_H / 2 },
+    ];
+    for (const pos of treePositions) {
+      if (this.textures.exists('env_dead_tree')) {
+        const tree = this.add.image(pos.x, pos.y, 'env_dead_tree');
+        tree.setDepth(DEPTH.GAME);
+      }
+    }
+    // Ruined walls as decoration
+    const wallPositions = [
+      { x: WORLD_W / 4, y: WORLD_H / 4 },
+      { x: (WORLD_W * 3) / 4, y: WORLD_H / 3 },
+      { x: WORLD_W / 3, y: (WORLD_H * 3) / 4 },
+      { x: (WORLD_W * 2) / 3, y: (WORLD_H * 2) / 3 },
+    ];
+    for (const pos of wallPositions) {
+      if (this.textures.exists('env_ruin_wall')) {
+        const wall = this.add.image(pos.x, pos.y, 'env_ruin_wall');
+        wall.setDepth(DEPTH.GAME);
+      }
+    }
+
     // ── Player ────────────────────────────────────────────────────────
     this._player = this.physics.add.image(mapData.playerSpawn.x, mapData.playerSpawn.y, 'hero_idle_0');
     this._player.setDepth(DEPTH.GAME);
+    this._player.setScale(1.5);
     this._player.setCollideWorldBounds(true);
     const body = this._player.body as Phaser.Physics.Arcade.Body;
     body.setDrag(600, 600);
@@ -64,6 +113,9 @@ export default class AshfieldsScene extends BaseWorldScene {
     // Register for y-sort + camera follow
     this.addYSortable(this._player);
     this.followTarget(this._player);
+
+    // ── Camera zoom for better readability ─────────────────────────────
+    this.cameras.main.setZoom(1.5);
 
     // ── Input ─────────────────────────────────────────────────────────
     Input.init(this);
