@@ -426,10 +426,11 @@ neutral/      MirrorKnight, BrambleEnemy, WraithEnemy
 minibosses/   ThornQueenMini, TheSleepwalker
 ```
 
-Still to build (9 to hit 40 + the 4 main bosses):
+All 40 entities built:
 ```
-bosses/       GrimdarTheForsaken, LumaMoth, TheWarden, SisterSilence
-ambient/      5 non-combat wildlife / herd creatures for region liveliness
+bosses/       GrimdarTheForsaken, LumaMoth, TheWarden, SisterSilence  [DONE]
+ambient/      AshfieldsDeer, VerdenmereFirefly, GreyveilCrow,          [DONE]
+              GildspireRat, VoidmarshJellyfish
 ```
 
 ---
