@@ -49,7 +49,7 @@ export const AREA_CONFIGS: Record<string, AreaConfig> = {
     imagePath: 'assets/areas/ashfields/square_2.jpg',  // more open ground, less rooftop
     worldW: WORLD,
     worldH: WORLD,
-    playerSpawn: { x: 240, y: 310 },  // center of open courtyard
+    playerSpawn: { x: 240, y: 280 },  // center of open courtyard
     transitions: [
       {
         // Bottom-center → street

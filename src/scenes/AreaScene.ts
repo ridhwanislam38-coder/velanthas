@@ -58,13 +58,29 @@ export default class AreaScene extends BaseWorldScene {
     this._bgImage.setDisplaySize(area.worldW, area.worldH);
     this._bgImage.setDepth(5);
 
+    // ── Ground layer (depth 5, rendered on top of base bg) ──────────
+    const groundKey = `${area.background}_ground`;
+    if (this.textures.exists(groundKey)) {
+      const groundImg = this.add.image(area.worldW / 2, area.worldH / 2, groundKey);
+      groundImg.setDisplaySize(area.worldW, area.worldH);
+      groundImg.setDepth(5);
+    }
+
+    // ── Foreground layer (depth 9999, renders over player) ──────────
+    const fgKey = `${area.background}_foreground`;
+    if (this.textures.exists(fgKey)) {
+      const fgImg = this.add.image(area.worldW / 2, area.worldH / 2, fgKey);
+      fgImg.setDisplaySize(area.worldW, area.worldH);
+      fgImg.setDepth(9999);
+    }
+
     // ── Player — small scale to match building proportions ─────────
     this._player = this.physics.add.image(
       area.playerSpawn.x,
       area.playerSpawn.y,
       'hero_idle_0',
     );
-    this._player.setScale(0.35);  // small relative to buildings, like Triangle Strategy
+    this._player.setScale(0.4);  // slightly bigger for visibility
     this._player.setDepth(area.playerSpawn.y); // y-sorted
     this._player.setCollideWorldBounds(true);
     const body = this._player.body as Phaser.Physics.Arcade.Body;
@@ -131,26 +147,17 @@ export default class AreaScene extends BaseWorldScene {
     const moving = Math.abs(mv.x) > 0.1 || Math.abs(mv.y) > 0.1;
 
     if (moving) {
-      // Pick texture based on dominant direction
-      if (Math.abs(mv.x) > Math.abs(mv.y)) {
-        // Horizontal dominant — use right sprite, flip for left
-        if (this.textures.exists('hero_right')) {
-          this._player.setTexture('hero_right');
-        }
-        this._player.setFlipX(mv.x < 0);
-      } else if (mv.y < 0) {
-        // Moving up
-        if (this.textures.exists('hero_up')) {
-          this._player.setTexture('hero_up');
-        }
-        this._player.setFlipX(false);
-      } else {
-        // Moving down
-        if (this.textures.exists('hero_down')) {
-          this._player.setTexture('hero_down');
-        }
-        this._player.setFlipX(false);
+      // Calculate 8-direction from movement vector
+      const angle = Math.atan2(mv.y, mv.x); // radians
+      const deg = ((angle * 180 / Math.PI) + 360) % 360;
+      // Map to 8 directions: 0=east, 45=south-east, 90=south, etc.
+      const dirs = ['east', 'south_east', 'south', 'south_west', 'west', 'north_west', 'north', 'north_east'];
+      const idx = Math.round(deg / 45) % 8;
+      const dirKey = `hero_walk_${dirs[idx]}`;
+      if (this.textures.exists(dirKey)) {
+        this._player.setTexture(dirKey);
       }
+      this._player.setFlipX(false); // rotation handles direction, no flip needed
     } else {
       // Idle
       this._player.setTexture('hero_idle_0');

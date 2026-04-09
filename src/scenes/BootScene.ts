@@ -33,6 +33,16 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('hero_atk_2',   'assets/sprites/characters/player_attack.png');
     this.load.image('hero_hurt',    'assets/sprites/characters/player_idle_front.png');
 
+    // ── 8-direction walk sprites (PixelLab) ──────────────────────────
+    this.load.image('hero_walk_south',      'assets/sprites/characters/player_walk_south.png');
+    this.load.image('hero_walk_south_west', 'assets/sprites/characters/player_walk_south-west.png');
+    this.load.image('hero_walk_west',       'assets/sprites/characters/player_walk_west.png');
+    this.load.image('hero_walk_north_west', 'assets/sprites/characters/player_walk_north-west.png');
+    this.load.image('hero_walk_north',      'assets/sprites/characters/player_walk_north.png');
+    this.load.image('hero_walk_north_east', 'assets/sprites/characters/player_walk_north-east.png');
+    this.load.image('hero_walk_east',       'assets/sprites/characters/player_walk_east.png');
+    this.load.image('hero_walk_south_east', 'assets/sprites/characters/player_walk_south-east.png');
+
     // ── Enemy sprites ──────────────────────────────────────────────────
     this.load.image('monster',      'assets/sprites/enemies/guard_enemy.png');
 
@@ -66,6 +76,8 @@ export default class BootScene extends Phaser.Scene {
     // ── HD-2D split layers (ground + foreground) ──────────────────────
     this.load.image('ashfields_ground',     'assets/tiles/environments/ashfields_hub_2_ground.png');
     this.load.image('ashfields_foreground', 'assets/tiles/environments/ashfields_hub_2_foreground.png');
+    this.load.image('ashfields_hub_ground',     'assets/areas/ashfields/square_2_ground.png');
+    this.load.image('ashfields_hub_foreground', 'assets/areas/ashfields/square_2_foreground.png');
     this.load.image('verdenmere_hub',   'assets/tiles/environments/verdenmere_hub.jpg');
     this.load.image('greyveil_hub',     'assets/tiles/environments/greyveil_hub.jpg');
     this.load.image('gildspire_hub',    'assets/tiles/environments/gildspire_hub.jpg');
