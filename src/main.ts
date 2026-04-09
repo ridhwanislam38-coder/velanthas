@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Howler } from 'howler';
 import { gameConfig } from './config/GameConfig';
 import type { GameState } from './types/game';
 
@@ -31,3 +32,16 @@ window.GS = {
 };
 
 window.game = new Phaser.Game(gameConfig);
+
+// ── Stop audio when tab is hidden / page is closed ──────────────────────
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    Howler.mute(true);
+  } else {
+    Howler.mute(false);
+  }
+});
+window.addEventListener('beforeunload', () => {
+  Howler.stop();
+  Howler.unload();
+});
