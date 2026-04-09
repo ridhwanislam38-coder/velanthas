@@ -7,16 +7,25 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "generate": "npx tsx scripts/generate-assets.ts"
+    "generate": "npx tsx scripts/generate-assets.ts",
+    "remotion:preview": "npx remotion preview src/cinematics/Root.tsx",
+    "remotion:render": "npx remotion render src/cinematics/Root.tsx PrologueCinematic assets/cinematics/prologue.mp4"
   },
   "dependencies": {
+    "@remotion/cli": "^4.0.447",
+    "@remotion/renderer": "^4.0.447",
     "@supabase/supabase-js": "^2.49.4",
     "howler": "^2.2.4",
     "phaser": "^3.88.2",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "remotion": "^4.0.447",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/howler": "^2.2.12",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "tsx": "^4.21.0",
     "typescript": "^5.7.3",
     "vite": "^6.3.1"

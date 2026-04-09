@@ -8,13 +8,12 @@
     "noImplicitOverride": true,
     "exactOptionalPropertyTypes": true,
     "lib": ["ES2022", "DOM"],
-    "outDir": "dist",
-    "rootDir": "src",
+    "jsx": "react-jsx",
+    "outDir": "../../dist/cinematics",
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["src"],
-  "exclude": ["src/cinematics"]
+  "include": ["./**/*.ts", "./**/*.tsx"]
 }
