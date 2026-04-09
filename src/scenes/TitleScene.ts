@@ -1,133 +1,138 @@
 import Phaser from 'phaser';
-import { W, H, COLOR } from '../config/Constants';
+import { W, H } from '../config/Constants';
 
-// Step 1 (playable): Shows title, ENTER → TownScene movement test
-// Step 11 (polish): Full cinematic title with hero silhouette + parallax stars
+// ── TitleScene — Dark Fantasy Title Screen ──────────────────────────────────
+// Coordinates in 320×180 internal resolution (Phaser scales 3× to screen).
+// No hero sprite — just atmosphere: stars, mountains, moon, title text.
+
 export default class TitleScene extends Phaser.Scene {
   private _started = false;
 
   constructor() { super({ key: 'TitleScene' }); }
 
   create(): void {
-    // Background
+    this._started = false;
+
+    // ── Background (starfield) ────────────────────────────────────────
     this.add.image(W / 2, H / 2, 'bg_stars').setDisplaySize(W, H);
 
-    // Moon glow
+    // ── Moon (subtle, upper right) ────────────────────────────────────
     const moon = this.add.graphics();
-    moon.fillStyle(0xfff5d6, 0.9);
-    moon.fillCircle(780, 110, 55);
-    moon.fillStyle(0xffd60a, 0.1);
-    moon.fillCircle(780, 110, 80);
+    moon.fillStyle(0xd0c8a0, 0.6);
+    moon.fillCircle(260, 35, 14);
+    moon.fillStyle(0xd0c8a0, 0.08);
+    moon.fillCircle(260, 35, 22);
 
-    // Mountain silhouettes
+    // ── Mountain silhouettes (320×180 coordinates) ────────────────────
     const mtn = this.add.graphics();
-    mtn.fillStyle(0x0a0a18, 1);
-    mtn.fillTriangle(0, H, 200, 290, 420, H);
-    mtn.fillTriangle(160, H, 380, 240, 620, H);
-    mtn.fillTriangle(420, H, 630, 270, 830, H);
-    mtn.fillTriangle(660, H, 860, 230, W, H);
-    mtn.fillStyle(COLOR.BG, 1);
-    mtn.fillTriangle(0, H, 150, 370, 330, H);
-    mtn.fillTriangle(290, H, 510, 310, 740, H);
-    mtn.fillTriangle(610, H, 810, 350, W, H);
+    // Far mountains (dark)
+    mtn.fillStyle(0x0a0a14, 1);
+    mtn.fillTriangle(0, H, 60, 95, 130, H);
+    mtn.fillTriangle(50, H, 120, 80, 200, H);
+    mtn.fillTriangle(130, H, 200, 90, 280, H);
+    mtn.fillTriangle(210, H, 270, 75, W, H);
+    // Near mountains (slightly lighter)
+    mtn.fillStyle(0x0e0e1a, 1);
+    mtn.fillTriangle(0, H, 45, 120, 100, H);
+    mtn.fillTriangle(80, H, 160, 105, 240, H);
+    mtn.fillTriangle(190, H, 265, 115, W, H);
 
-    // Title
-    const title = this.add.text(W / 2, H * 0.28, 'VELANTHAS', {
-      fontFamily: "'Press Start 2P'",
-      fontSize: '36px',
-      color: '#e94560',
-      stroke: '#6b0020',
-      strokeThickness: 6,
-      shadow: { offsetX: 4, offsetY: 4, color: '#6b0020', fill: true },
-    }).setOrigin(0.5).setAlpha(0);
+    // ── Ground fog line ───────────────────────────────────────────────
+    const fog = this.add.graphics();
+    fog.fillStyle(0x1a1a2a, 0.5);
+    fog.fillRect(0, 145, W, 35);
 
-    const sub = this.add.text(W / 2, H * 0.39, "THE ACCORD'S SILENCE", {
+    // ── Title ─────────────────────────────────────────────────────────
+    const title = this.add.text(W / 2, 55, 'VELANTHAS', {
       fontFamily: "'Press Start 2P'",
-      fontSize: '13px',
-      color: '#4cc9f0',
-      stroke: '#0077b6',
+      fontSize: '18px',
+      color: '#c8b890',
+      stroke: '#2a1a0e',
       strokeThickness: 3,
     }).setOrigin(0.5).setAlpha(0);
 
-    // Hero silhouette
-    const hero = this.add.image(W / 2, H * 0.62, 'hero_idle_0')
-      .setScale(4)
-      .setAlpha(0)
-      .setTint(0x4cc9f0);
-
-    // Atmospheric glow
-    const glow = this.add.graphics();
-    glow.fillStyle(0x4cc9f0, 0.06);
-    glow.fillEllipse(W / 2, H * 0.73, 280, 60);
-
-    // Tagline
-    const lore = this.add.text(
-      W / 2, H * 0.79,
-      '"FOUR HUNDRED YEARS OF ACCORD —\nAND THEN, SILENCE"',
-      { fontFamily: "'Press Start 2P'", fontSize: '7px', color: '#6b6b8a', align: 'center' },
-    ).setOrigin(0.5).setAlpha(0);
-
-    // Press Enter prompt
-    const prompt = this.add.text(W / 2, H * 0.90, 'PRESS ENTER TO BEGIN', {
-      fontFamily: "'Press Start 2P'", fontSize: '11px', color: '#fffffe',
+    const sub = this.add.text(W / 2, 72, "THE ACCORD'S SILENCE", {
+      fontFamily: "'Press Start 2P'",
+      fontSize: '6px',
+      color: '#6a6a7a',
+      stroke: '#0a0a0e',
+      strokeThickness: 1,
     }).setOrigin(0.5).setAlpha(0);
 
-    // Reveal sequence
-    this.tweens.add({ targets: title,  alpha: 1, duration: 1200, ease: 'Power2', delay: 300 });
-    this.tweens.add({ targets: sub,    alpha: 1, duration: 800,  delay: 900 });
-    this.tweens.add({ targets: hero,   alpha: 0.9, duration: 1000, ease: 'Back.easeOut', delay: 600 });
-    this.tweens.add({ targets: lore,   alpha: 0.6, duration: 800, delay: 1400 });
+    // ── Accord white line (eerie) ─────────────────────────────────────
+    const accordLine = this.add.graphics();
+    accordLine.fillStyle(0xF5F0E8, 0.15);
+    accordLine.fillRect(W * 0.2, 85, W * 0.6, 1);
+
+    // ── Tagline ───────────────────────────────────────────────────────
+    const lore = this.add.text(W / 2, 105,
+      '"FOUR HUNDRED YEARS OF ACCORD —\nAND THEN, SILENCE"',
+      { fontFamily: "'Press Start 2P'", fontSize: '4px', color: '#4a4a5a', align: 'center' },
+    ).setOrigin(0.5).setAlpha(0);
+
+    // ── Prompt ────────────────────────────────────────────────────────
+    const prompt = this.add.text(W / 2, 155, 'PRESS ENTER TO BEGIN', {
+      fontFamily: "'Press Start 2P'", fontSize: '5px', color: '#8a8a9a',
+    }).setOrigin(0.5).setAlpha(0);
+
+    // ── Reveal sequence ───────────────────────────────────────────────
+    this.tweens.add({ targets: title, alpha: 1, duration: 2000, ease: 'Power2', delay: 500 });
+    this.tweens.add({ targets: sub,   alpha: 0.8, duration: 1200, delay: 1500 });
+    this.tweens.add({ targets: lore,  alpha: 0.5, duration: 1000, delay: 2500 });
     this.tweens.add({
       targets: prompt,
-      alpha: { from: 0, to: 1 }, duration: 600,
-      yoyo: true, repeat: -1, delay: 2500,
+      alpha: { from: 0, to: 0.8 }, duration: 800,
+      yoyo: true, repeat: -1, delay: 3500,
     });
 
-    // Hero idle bob
-    this.time.addEvent({
-      delay: 600,
-      callback: () => {
-        const next = hero.texture.key === 'hero_idle_0' ? 'hero_idle_1' : 'hero_idle_0';
-        hero.setTexture(next);
-      },
-      loop: true,
-    });
+    // ── Twinkling stars ───────────────────────────────────────────────
+    for (let i = 0; i < 20; i++) {
+      const sx = Phaser.Math.Between(0, W);
+      const sy = Phaser.Math.Between(0, 130);
+      const star = this.add.graphics();
+      star.fillStyle(0xffffff, Phaser.Math.FloatBetween(0.2, 0.6));
+      star.fillRect(0, 0, 1, 1);
+      star.setPosition(sx, sy);
 
-    // Star particles
-    this._spawnStars();
+      this.tweens.add({
+        targets: star,
+        alpha: { from: Phaser.Math.FloatBetween(0.05, 0.2), to: Phaser.Math.FloatBetween(0.4, 0.8) },
+        duration: Phaser.Math.Between(2000, 5000),
+        yoyo: true, repeat: -1,
+        delay: Phaser.Math.Between(0, 4000),
+      });
+    }
 
-    // Input
+    // ── Drifting ash particles ─────────────────────────────────────────
+    for (let i = 0; i < 8; i++) {
+      const ash = this.add.graphics();
+      ash.fillStyle(0x8a7a5a, 0.3);
+      ash.fillRect(0, 0, 1, 1);
+      ash.setPosition(Phaser.Math.Between(0, W), Phaser.Math.Between(60, 140));
+
+      this.tweens.add({
+        targets: ash,
+        x: `+=${Phaser.Math.Between(-20, 20)}`,
+        y: `+=${Phaser.Math.Between(10, 30)}`,
+        alpha: { from: 0.3, to: 0 },
+        duration: Phaser.Math.Between(4000, 8000),
+        repeat: -1,
+        delay: Phaser.Math.Between(0, 5000),
+      });
+    }
+
+    // ── Input ─────────────────────────────────────────────────────────
     const start = (): void => {
       if (this._started) return;
       this._started = true;
-      this.cameras.main.fadeOut(600, 4, 4, 8);
+      this.cameras.main.fadeOut(800, 4, 4, 8);
       this.cameras.main.once('camerafadeoutcomplete', () => {
-        this.scene.start('PrologueScene');
+        this.scene.start('AshfieldsScene');
       });
     };
 
     this.input.keyboard?.once('keydown-ENTER', start);
     this.input.keyboard?.once('keydown-SPACE', start);
     this.input.once('pointerdown', start);
-  }
-
-  private _spawnStars(): void {
-    for (let i = 0; i < 30; i++) {
-      const x = Phaser.Math.Between(0, W);
-      const y = Phaser.Math.Between(0, H * 0.75);
-      const star = this.add.graphics();
-      const size = Phaser.Math.Between(1, 2);
-      star.fillStyle(0xffffff, Phaser.Math.FloatBetween(0.3, 0.9));
-      star.fillRect(0, 0, size, size);
-      star.setPosition(x, y);
-
-      this.tweens.add({
-        targets: star,
-        alpha: { from: Phaser.Math.FloatBetween(0.1, 0.4), to: Phaser.Math.FloatBetween(0.7, 1) },
-        duration: Phaser.Math.Between(1200, 4000),
-        yoyo: true, repeat: -1,
-        delay: Phaser.Math.Between(0, 3000),
-      });
-    }
   }
 }
