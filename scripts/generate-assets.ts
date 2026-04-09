@@ -261,7 +261,7 @@ async function generateElevenlabs(): Promise<void> {
       `https://api.elevenlabs.io/v1/text-to-speech/${voice.voice_id}`,
       {
         text: line.text,
-        model_id: 'eleven_monolingual_v1',
+        model_id: 'eleven_flash_v2_5',
         voice_settings: {
           stability: 0.75,
           similarity_boost: 0.85,
