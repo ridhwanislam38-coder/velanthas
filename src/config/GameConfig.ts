@@ -5,7 +5,8 @@ import TitleScene     from '../scenes/TitleScene';
 import PrologueScene  from '../scenes/PrologueScene';
 import TownScene      from '../scenes/TownScene';
 import DungeonScene   from '../scenes/DungeonScene';
-import AshfieldsScene from '../scenes/AshfieldsScene';
+import AshfieldsScene  from '../scenes/AshfieldsScene';
+import VerdenmereScene from '../scenes/VerdenmereScene';
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -31,5 +32,6 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     TownScene,
     DungeonScene,
     AshfieldsScene,
+    VerdenmereScene,
   ],
 };

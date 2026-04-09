@@ -26,7 +26,8 @@ export type SceneKey =
   | 'PrologueScene'
   | 'TownScene'
   | 'DungeonScene'
-  | 'AshfieldsScene';
+  | 'AshfieldsScene'
+  | 'VerdenmereScene';
 
 // ── Asset keys — all texture/audio keys live here ────────────────────────
 // NOTE: NO music keys. Velanthas is music-free — ambient soundscapes only.
