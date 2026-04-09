@@ -52,6 +52,10 @@ export default class BootScene extends Phaser.Scene {
     // ── HD-2D Region backgrounds (Leonardo AI) ─────────────────────────
     this.load.image('ashfields_hub_1',  'assets/tiles/environments/ashfields_hub_1.jpg');
     this.load.image('ashfields_hub_2',  'assets/tiles/environments/ashfields_hub_2.jpg');
+
+    // ── HD-2D split layers (ground + foreground) ──────────────────────
+    this.load.image('ashfields_ground',     'assets/tiles/environments/ashfields_hub_2_ground.png');
+    this.load.image('ashfields_foreground', 'assets/tiles/environments/ashfields_hub_2_foreground.png');
     this.load.image('verdenmere_hub',   'assets/tiles/environments/verdenmere_hub.jpg');
     this.load.image('greyveil_hub',     'assets/tiles/environments/greyveil_hub.jpg');
     this.load.image('gildspire_hub',    'assets/tiles/environments/gildspire_hub.jpg');

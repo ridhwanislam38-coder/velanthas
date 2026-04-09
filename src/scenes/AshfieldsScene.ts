@@ -17,10 +17,13 @@ const WORLD_W = 1024;
 const WORLD_H = 1024;
 const MOVE_SPEED = 100;
 
-// Collision grid — 32x32 cells over 1024x1024 = 32 cells each axis
-const GRID_SIZE = 32;
-const GRID_COLS = WORLD_W / GRID_SIZE;  // 32
-const GRID_ROWS = WORLD_H / GRID_SIZE;  // 32
+// Collision grid — 16x16 cells over 1024x1024 = 64 cells each axis
+const GRID_SIZE = 16;
+const GRID_COLS = WORLD_W / GRID_SIZE;  // 64
+const GRID_ROWS = WORLD_H / GRID_SIZE;  // 64
+
+// Version tag — bump to invalidate saved collision data on grid size change
+const COLLISION_VERSION = 'v2_16x16';
 
 export default class AshfieldsScene extends BaseWorldScene {
   private _sky!:      SkySystem;
@@ -28,6 +31,7 @@ export default class AshfieldsScene extends BaseWorldScene {
   private _postfx!:   PostFXSystem;
   private _player!:   Phaser.Physics.Arcade.Image;
   private _bgImage!:  Phaser.GameObjects.Image;
+  private _fgImage!:  Phaser.GameObjects.Image;
 
   // Collision grid: true = blocked, false = walkable
   private _collisionGrid: boolean[][] = [];
@@ -44,11 +48,19 @@ export default class AshfieldsScene extends BaseWorldScene {
     const config: WorldSceneConfig = { worldWidth: WORLD_W, worldHeight: WORLD_H };
     super.create(config);
 
-    // ── Background — full 1024x1024 image ─────────────────────────────
-    const bgKey = this.textures.exists('ashfields_hub_2') ? 'ashfields_hub_2' : 'ashfields_hub_1';
-    this._bgImage = this.add.image(WORLD_W / 2, WORLD_H / 2, bgKey);
+    // ── HD-2D 3-layer rendering ────────────────────────────────────────
+    // Ground layer (depth 5) — roads, floor tiles, below characters
+    const groundKey = this.textures.exists('ashfields_ground') ? 'ashfields_ground' : 'ashfields_hub_2';
+    this._bgImage = this.add.image(WORLD_W / 2, WORLD_H / 2, groundKey);
     this._bgImage.setDisplaySize(WORLD_W, WORLD_H);
-    this._bgImage.setDepth(DEPTH.BG_PROPS);
+    this._bgImage.setDepth(5);
+
+    // Foreground layer (depth 9999) — rooftops, awnings, renders above characters
+    if (this.textures.exists('ashfields_foreground')) {
+      this._fgImage = this.add.image(WORLD_W / 2, WORLD_H / 2, 'ashfields_foreground');
+      this._fgImage.setDisplaySize(WORLD_W, WORLD_H);
+      this._fgImage.setDepth(9999);
+    }
 
     // ── Collision grid — load saved or generate default ───────────────
     this._initCollisionGrid();
@@ -148,23 +160,42 @@ export default class AshfieldsScene extends BaseWorldScene {
   // ── Collision Grid ────────────────────────────────────────────────────
 
   private _initCollisionGrid(): void {
-    // Try to load saved collision data
-    const saved = localStorage.getItem('ashfields_collision');
-    if (saved) {
-      this._collisionGrid = JSON.parse(saved) as boolean[][];
-      return;
+    // Version check — invalidate saved data when grid size changes
+    const savedVersion = localStorage.getItem('ashfields_collision_version');
+    if (savedVersion === COLLISION_VERSION) {
+      const saved = localStorage.getItem('ashfields_collision');
+      if (saved) {
+        this._collisionGrid = JSON.parse(saved) as boolean[][];
+        return;
+      }
+    } else {
+      // Clear stale collision data from old grid size
+      localStorage.removeItem('ashfields_collision');
+      localStorage.setItem('ashfields_collision_version', COLLISION_VERSION);
     }
 
-    // Default: block the top 35% (rooftops) and edges, open the center
+    // Default collision for 64x64 grid (16px cells) matching tavern image:
+    //   - Top 35% blocked (rooftops)
+    //   - Left building: cols 0-6, rows 35%-80%
+    //   - Right building: cols 58-63, rows 35%-80%
+    //   - Center courtyard open: cols 10-54, rows 40%-85%
+    //   - Bottom 10% blocked (image edge)
     this._collisionGrid = [];
     for (let row = 0; row < GRID_ROWS; row++) {
       this._collisionGrid[row] = [];
       for (let col = 0; col < GRID_COLS; col++) {
-        const isEdge = row === 0 || row === GRID_ROWS - 1 || col === 0 || col === GRID_COLS - 1;
-        const isRoof = row < GRID_ROWS * 0.35;
-        const isLeftBuilding = col < 4 && row > GRID_ROWS * 0.3;
-        const isRightBuilding = col > GRID_COLS - 5 && row > GRID_ROWS * 0.3;
-        this._collisionGrid[row]![col] = isEdge || isRoof || isLeftBuilding || isRightBuilding;
+        const rowPct = row / GRID_ROWS;
+
+        const isRoof = rowPct < 0.35;
+        const isBottomEdge = rowPct >= 0.90;
+        const isLeftBuilding = col <= 6 && rowPct >= 0.35 && rowPct < 0.80;
+        const isRightBuilding = col >= 58 && rowPct >= 0.35 && rowPct < 0.80;
+
+        // Default: blocked unless in the open courtyard zone
+        const isCenterOpen = col >= 10 && col <= 54 && rowPct >= 0.40 && rowPct < 0.85;
+
+        // Block everything except the center courtyard and paths
+        this._collisionGrid[row]![col] = isRoof || isBottomEdge || isLeftBuilding || isRightBuilding || !isCenterOpen;
       }
     }
   }
@@ -197,6 +228,7 @@ export default class AshfieldsScene extends BaseWorldScene {
     } else {
       // Save and rebuild
       localStorage.setItem('ashfields_collision', JSON.stringify(this._collisionGrid));
+      localStorage.setItem('ashfields_collision_version', COLLISION_VERSION);
       this._buildWallsFromGrid();
       // Re-add collider
       this.physics.add.collider(this._player, this._walls);
@@ -231,7 +263,7 @@ export default class AshfieldsScene extends BaseWorldScene {
 
       if (row >= 0 && row < GRID_ROWS && col >= 0 && col < GRID_COLS) {
         // Toggle on first click, then paint with the same value while dragging
-        if (pointer.justDown) {
+        if ((pointer as unknown as { justDown: boolean }).justDown) {
           this._collisionGrid[row]![col] = !this._collisionGrid[row]![col];
         } else {
           // Paint mode — use whatever the first click set

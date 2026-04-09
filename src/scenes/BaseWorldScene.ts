@@ -1,12 +1,11 @@
 import Phaser from 'phaser';
-import { DEPTH } from '../config/visualConfig';
 import { Bus, GameEvent } from '../systems/EventBus';
 
 // ── BaseWorldScene ──────────────────────────────────────────────────────────
 // Abstract base for all birds-eye region scenes. Provides:
 //   - Zero-gravity physics (per-scene override of world gravity)
 //   - Camera: smooth-lerp follow with deadzone, world bounds, sub-pixel correction
-//   - Y-sort: game-layer objects re-sorted by y each frame (depth 100–149)
+//   - Y-sort: HD-2D raw-Y depth (sprites between ground=5 and foreground=9999)
 //   - System lifecycle hooks for subclass wiring
 //
 // Subclasses override the abstract methods and call super.create() / super.update().
@@ -15,9 +14,6 @@ import { Bus, GameEvent } from '../systems/EventBus';
 const CAM_LERP        = 0.08;  // low = smooth tracking, 1 = snap
 const CAM_DEADZONE_W  = 60;    // px — player moves freely in this rect
 const CAM_DEADZONE_H  = 40;
-
-// ── Y-sort range within DEPTH.GAME ──────────────────────────────────────
-const YSORT_RANGE = DEPTH.GAME_MAX - DEPTH.GAME; // 49 depth levels
 
 export interface WorldSceneConfig {
   /** World width in game px — used for camera bounds + tilemap */
@@ -74,14 +70,13 @@ export abstract class BaseWorldScene extends Phaser.Scene {
   }
 
   // ── Y-sort ────────────────────────────────────────────────────────────
+  // HD-2D: sprites get depth = raw Y (0–worldH). Ground layer is at 5,
+  // foreground layer is at 9999, so sprites always render between them.
   private _ySort(): void {
-    const maxY = this._worldH || 1;
-    const base = DEPTH.GAME;
-
     for (const obj of this._ySortables) {
-      // normalise y into 0–1, clamp, then map into depth range
-      const normalized = Math.max(0, Math.min(1, (obj as unknown as { y: number }).y / maxY));
-      obj.setDepth(base + Math.floor(normalized * YSORT_RANGE));
+      const y = (obj as unknown as { y: number }).y;
+      // Clamp to 10–9998 so sprites stay between ground (5) and foreground (9999)
+      obj.setDepth(Math.max(10, Math.min(9998, Math.round(y))));
     }
   }
 
