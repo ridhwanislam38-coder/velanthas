@@ -6,7 +6,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "generate": "npx tsx scripts/generate-assets.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
