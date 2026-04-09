@@ -44,8 +44,20 @@ export default class AshfieldsScene extends BaseWorldScene {
     this._bgImage.setDisplaySize(WORLD_W, WORLD_H);
     this._bgImage.setDepth(DEPTH.BG_PROPS);
 
-    // ── Player ────────────────────────────────────────────────────────
-    this._player = this.physics.add.image(WORLD_W / 2, WORLD_H / 2, 'hero_idle_0');
+    // ── Collision walls (invisible) — keep player in walkable courtyard ──
+    const walls = this.physics.add.staticGroup();
+
+    // Top buildings — block upper 40% of the map
+    walls.add(this.add.rectangle(WORLD_W / 2, 100, WORLD_W, 200, 0x000000, 0).setOrigin(0.5));
+    // Left building wall
+    walls.add(this.add.rectangle(60, WORLD_H / 2, 120, WORLD_H * 0.4, 0x000000, 0).setOrigin(0.5));
+    // Right building wall
+    walls.add(this.add.rectangle(WORLD_W - 60, WORLD_H / 2, 120, WORLD_H * 0.4, 0x000000, 0).setOrigin(0.5));
+    // Bottom edge
+    walls.add(this.add.rectangle(WORLD_W / 2, WORLD_H - 20, WORLD_W, 40, 0x000000, 0).setOrigin(0.5));
+
+    // ── Player — spawn in open courtyard area (lower center) ─────────
+    this._player = this.physics.add.image(WORLD_W / 2, WORLD_H * 0.65, 'hero_idle_0');
     this._player.setDepth(DEPTH.GAME);
     this._player.setCollideWorldBounds(true);
     const body = this._player.body as Phaser.Physics.Arcade.Body;
@@ -53,6 +65,9 @@ export default class AshfieldsScene extends BaseWorldScene {
 
     this.addYSortable(this._player);
     this.followTarget(this._player);
+
+    // Collide player with walls
+    this.physics.add.collider(this._player, walls);
 
     // ── Input ─────────────────────────────────────────────────────────
     Input.init(this);
