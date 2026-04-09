@@ -5,8 +5,6 @@ import TitleScene     from '../scenes/TitleScene';
 import PrologueScene  from '../scenes/PrologueScene';
 import TownScene      from '../scenes/TownScene';
 import DungeonScene   from '../scenes/DungeonScene';
-import BattleScene    from '../scenes/BattleScene';
-import ResultScene    from '../scenes/ResultScene';
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -31,7 +29,5 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     PrologueScene,
     TownScene,
     DungeonScene,
-    BattleScene,
-    ResultScene,
   ],
 };

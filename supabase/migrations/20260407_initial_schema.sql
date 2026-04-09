@@ -1,4 +1,4 @@
--- ── StudyQuestV3 / VELANTHAS — Initial Schema ────────────────────────────
+-- ── VELANTHAS — Initial Schema ────────────────────────────────────────────
 -- Run via Supabase dashboard or: supabase db push
 -- RLS: players read/write OWN data only. Leaderboard: read-all, write-own.
 

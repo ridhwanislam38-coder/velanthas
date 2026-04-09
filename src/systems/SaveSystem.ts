@@ -17,8 +17,8 @@ import { Bus, GameEvent } from './EventBus';
 //   Save.init(player);
 //   const saveData = await Save.load();
 
-const LS_SAVE_KEY    = 'sq_save';
-const LS_SAVE_ID_KEY = 'sq_save_id';
+const LS_SAVE_KEY    = 'velanthas_save';
+const LS_SAVE_ID_KEY = 'velanthas_save_id';
 
 export class SaveSystem {
   private _saveId:  string | null = null;
@@ -119,22 +119,18 @@ export class SaveSystem {
 
   private _defaultPlayerData(): PlayerData {
     return {
-      name:              'Wanderer',
-      level:             1,
-      xp:                0,
-      xpToNext:          100,
-      hp:                100,
-      maxHp:             100,
-      atk:               10,
-      gold:              0,
-      combo:             0,
-      breakCount:        0,
-      subject:           'math',
-      items:             { hints: 3, shields: 1, surges: 0, elixirs: 0 },
-      buffs:             { atkMult: 1, shieldActive: false, surgeActive: false },
-      questionsAnswered: 0,
-      totalDamage:       0,
-      maxCombo:          0,
+      name:        'Wanderer',
+      level:       1,
+      xp:          0,
+      xpToNext:    120,
+      hp:          100,
+      maxHp:       100,
+      atk:         10,
+      currency:    0,
+      combo:       0,
+      breakCount:  0,
+      totalDamage: 0,
+      maxCombo:    0,
     };
   }
 }

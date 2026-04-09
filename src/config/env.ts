@@ -11,12 +11,10 @@ const envSchema = z.object({
   VITE_SUPABASE_URL:      z.string().url({ message: 'VITE_SUPABASE_URL must be a valid URL' }),
   VITE_SUPABASE_ANON_KEY: z.string().min(20, { message: 'VITE_SUPABASE_ANON_KEY too short' }),
 
-  // Optional — user-provided in-game (Claude AI for questions)
-  VITE_CLAUDE_API_KEY:    z.string().min(10).optional(),
-
-  // Optional — Open Trivia DB base URL
-  VITE_OTDB_BASE_URL:     z.string().url().optional()
-    .default('https://opentdb.com/api.php'),
+  // Optional — AI tool pipeline
+  VITE_ELEVENLABS_API_KEY:    z.string().min(10).optional(),
+  VITE_FREESOUND_API_KEY:     z.string().min(10).optional(),
+  VITE_RETRODIFFUSION_API_KEY:z.string().min(10).optional(),
 
   // Injected by Vite — always present
   MODE:         z.enum(['development', 'test', 'production']),
@@ -30,23 +28,24 @@ const envSchema = z.object({
 // In development: missing vars show a clear error in console.
 function parseEnv(): z.infer<typeof envSchema> {
   const raw = {
-    VITE_SUPABASE_URL:      import.meta.env['VITE_SUPABASE_URL'],
-    VITE_SUPABASE_ANON_KEY: import.meta.env['VITE_SUPABASE_ANON_KEY'],
-    VITE_CLAUDE_API_KEY:    import.meta.env['VITE_CLAUDE_API_KEY'],
-    VITE_OTDB_BASE_URL:     import.meta.env['VITE_OTDB_BASE_URL'],
-    MODE:                   import.meta.env['MODE'],
-    DEV:                    import.meta.env['DEV'],
-    PROD:                   import.meta.env['PROD'],
-    SSR:                    import.meta.env['SSR'],
+    VITE_SUPABASE_URL:          import.meta.env['VITE_SUPABASE_URL'],
+    VITE_SUPABASE_ANON_KEY:     import.meta.env['VITE_SUPABASE_ANON_KEY'],
+    VITE_ELEVENLABS_API_KEY:    import.meta.env['VITE_ELEVENLABS_API_KEY'],
+    VITE_FREESOUND_API_KEY:     import.meta.env['VITE_FREESOUND_API_KEY'],
+    VITE_RETRODIFFUSION_API_KEY:import.meta.env['VITE_RETRODIFFUSION_API_KEY'],
+    MODE:                       import.meta.env['MODE'],
+    DEV:                        import.meta.env['DEV'],
+    PROD:                       import.meta.env['PROD'],
+    SSR:                        import.meta.env['SSR'],
   };
 
   const result = envSchema.safeParse(raw);
   if (!result.success) {
     const missing = result.error.issues.map(i => `  ${i.path.join('.')}: ${i.message}`).join('\n');
-    console.error(`[StudyQuest] Environment variable validation failed:\n${missing}`);
+    console.error(`[Velanthas] Environment variable validation failed:\n${missing}`);
 
     if (import.meta.env['PROD']) {
-      throw new Error(`[StudyQuest] Missing required environment variables. Check Vercel env config.`);
+      throw new Error(`[Velanthas] Missing required environment variables. Check Vercel env config.`);
     }
   }
 

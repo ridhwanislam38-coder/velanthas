@@ -148,8 +148,9 @@ export class NPC {
   }
 }
 
-// ── Starter dialogue tree — Magistra Eon (hub mentor) ────────────────────
-// Wire this to the Magistra NPC at Umbral Crossing.
+// ── Starter dialogue tree — Magistra Eon ─────────────────────────────────
+// Scholar of the Accord, found in the Ashfields hub. Not a mentor — an NPC
+// with knowledge the player can choose to engage with or ignore.
 export const MAGISTRA_EON_TREE: DialogueTree = {
   intro: {
     lines: [

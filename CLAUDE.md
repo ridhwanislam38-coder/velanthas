@@ -1,52 +1,206 @@
 # VELANTHAS — THE ACCORD'S SILENCE
 ## CLAUDE.md — Project Bible & Session Rules
 
-> **Active world**: VELANTHAS. The study RPG mechanics run parallel to this narrative.
+> **Active world**: VELANTHAS. Pure narrative HD-2D action-RPG.
 > Story: `src/story/lore/CoreNarrative.ts` | Palette: `src/config/paletteConfig.ts`
+> Last updated: 2026-04-09 | **Direction pivot**: HD-2D birds-eye (was side-scroller)
 
 ---
 
 ## GENRE & VISION
 
-Dark fantasy action RPG — **Hollow Knight** visual standard, **E33** combat philosophy.
-- Pixel art at 320×180 internal resolution, scaled 3× to screen
-- Every region has a distinct palette, sky, and lighting feel
+**HD-2D narrative action-RPG** — visual standard of **Triangle Strategy / Octopath Traveler**, combat philosophy of **Clair Obscur: Expedition 33**.
+
+- Dense, detailed pixel art (16×16 or 32×32 tiles) on **3D-lit environments** with depth-of-field, volumetric lighting, bloom, particle fog
+- **Camera**: angled birds-eye / diorama — NOT side-scroller, NOT third-person. Sub-pixel camera correction for smooth movement.
+- **Platforming**: not a platformer, but some platform sections are allowed
 - Combat: frame-counted parry/dodge, AP system, 7 cinematic specials
 - Story: environmental — player pieces together the Accord's silence from ruins
 - No tutorial text — world teaches through design
+- Every region has a distinct palette, sky, lighting feel, and ambient soundscape
+
+### Content Volume Targets (non-negotiable minimums)
+
+| Content | Target |
+|---------|--------|
+| Main story | 8–10 hours |
+| Side quests | 4–6 hours |
+| Secrets | 2–3 hours |
+| NG+ | +6–8 hours |
+| Total first playthrough | **20+ hours** |
+| Main boss fights | 4 |
+| Mini-bosses | 4 |
+| Enemy types | **40** (31 files already exist — build the rest) |
+| NPCs with quests | 12 |
+| Ambient NPCs | 20 |
+| Regions | 5 + 1 secret |
+| Secrets | 15 |
+| Lore items | 50 |
+| Equipment pieces | 30 |
+| Pictos | 25 |
+| Combo routes | 20 |
+| Cinematics (via Remotion) | 15 |
+
+### NG+ Progression
+- First clear → new difficulty + enemy remixes
+- Find all lore → new area unlocks
+- Find all secrets → new NPC appears, comments on every secret found
 
 ---
 
-## TECH STACK (LOCKED — DO NOT DEVIATE)
+## CONTENT RULES (FAITH-BASED, NON-NEGOTIABLE)
+
+Nawfi is Muslim. The game must respect these rules everywhere:
+
+- **ZERO music**. No background music, no menu music, no boss music, no area themes. Atmosphere is carried entirely by ambient soundscapes (wind, water, footsteps, crowd murmur, fire crackle, rain, wildlife).
+- **No revealing clothing** on any character. Outfit designs must be modest by default.
+- **No romance** storylines, flirtation, or suggestive content.
+- **No alcohol glamorisation**, no gambling mechanics framed as entertainment, no idol worship framed positively.
+- Any art generation prompt (RetroDiffusion etc.) must include modesty constraints.
+
+---
+
+## TECH STACK (LOCKED)
 
 | Layer | Tool | Notes |
 |-------|------|-------|
-| Renderer | **Phaser 3** (latest) | pixelArt: true, roundPixels: true |
+| Renderer | **Phaser 3** (latest) | `pixelArt: true`, `roundPixels: true` |
 | Bundler | **Vite** | Fast HMR, ESBuild under the hood |
 | Language | **TypeScript strict** | `strict: true` + `noUncheckedIndexedAccess` + `noImplicitOverride` + `exactOptionalPropertyTypes` |
-| Audio | **Howler.js** | All SFX and music through AudioSystem |
-| Level Design | **LDtk** or **Tiled** | 32×32 tile grid, exported as JSON |
+| Audio | **Howler.js** | ALL sound via `AudioSystem` — ambient layers + SFX only, no music channel |
+| Level Design | **LDtk** or **Tiled** | 32×32 tile grid, exported as JSON. Never hardcode levels. |
+| Cinematics | **Remotion** | All 15 cutscenes as React components → rendered video → `assets/cinematics/` |
+| Voice | **ElevenLabs** | NPC voice, narrator, cinematic lines → `assets/audio/voice/` |
+| SFX Library | **FreeSound** (CC0 preferred, attribute CC-BY) | `assets/audio/sfx/` |
+| Sprite Gen | **RetroDiffusion** | Batch-gen + Aseprite hand-refine → `assets/sprites/` |
 | Backend | **Supabase** | Auth + save data + leaderboard |
 | Deploy | **Vercel** | Auto-deploy from main branch |
+| Input | **Gamepad API** via Phaser | Keyboard + mouse + Bluetooth/wired controller, all bindings rebindable |
+
+### RULE: Before writing custom code for any asset pipeline, check if one of these tools already handles it.
 
 ---
 
-## ART RULES — HOLLOW KNIGHT STANDARD
+## AI TOOLS — MANDATORY USE
 
-- **Resolution**: 320×180 internal, 3× display scale via Phaser `Scale.FIT`
+These tools exist to accelerate solo development. **DO NOT manually build what they handle.** You are a solo-dev operation — these tools ARE your team. Every session should leverage them to move faster, not slower.
+
+### The Rule (non-negotiable)
+
+Before writing ANY code, ask in this exact order:
+1. Does an **MCP server** already do this? (Obsidian, Context7, Chrome DevTools, Supabase, Figma, Playwright, Sentry, etc.)
+2. Does an **installed agent skill** already do this? (`frontend-design`, `agent-architecture`, `worker-benchmarks`, `superpowers:*`, etc.)
+3. Does one of the four **content-generation AI tools** already do this? (ElevenLabs / Remotion / RetroDiffusion / FreeSound)
+4. Does an **installed library** already do this? (Howler for audio, Phaser for rendering, Zod for validation, LDtk for levels)
+
+**If the answer to 1–4 is "yes" — use the tool. Do not write custom code.**
+
+### Forbidden shortcuts
+
+- ❌ Hand-drawing sprites → use RetroDiffusion, then Aseprite refine
+- ❌ Writing cinematics as Phaser tween sequences → use Remotion React components → rendered MP4
+- ❌ Placeholder text for voice lines → use ElevenLabs TTS, commit the generated .wav/.mp3
+- ❌ Custom audio scheduler / mixer / crossfade code → use Howler.js (already installed)
+- ❌ Skipping a cinematic because "it's complex" → Remotion handles complexity declaratively, build it
+- ❌ Manually authoring tilemaps in code → use LDtk, parse the `.ldtk` JSON
+- ❌ Guessing at library APIs → call Context7 MCP to fetch current docs
+- ❌ Manually profiling with console.time → use Chrome DevTools MCP Lighthouse audit
+- ❌ Writing a review checklist inline → invoke the `frontend-design` or `agent-architecture` skill
+- ❌ Asking the user to decide between approaches without first checking if `superpowers:brainstorm` or `agent-architecture` would resolve it
+
+
+### ElevenLabs (Voice & SFX generation)
+- Purpose: voice acting for cinematics, NPC dialogue, narrator
+- Text-to-Speech API → distinct voice per character
+- Also: SFX generation via their SFX model
+- Docs: https://elevenlabs.io/docs
+
+### Remotion (Cinematics)
+- Purpose: programmatic video generation for all 15 cutscenes
+- Source: `src/cinematics/` (React components)
+- Output: `assets/cinematics/*.mp4`
+- Docs: https://www.remotion.dev/docs
+
+### RetroDiffusion (Pixel art generation)
+- Purpose: AI-generated sprites, tilesets, portraits, environment tiles
+- Workflow: batch-generate → Aseprite hand-refine → commit
+- Output: `assets/sprites/` organised by category
+- Docs: https://retrodiffusion.ai
+- **Modesty constraint must be in every prompt.**
+
+### FreeSound (Ambient + SFX library)
+- **CRITICAL**: no music means ambient sound carries 100% of atmosphere
+- Per-region: build layered ambient soundscapes (wind bed + distance layer + foreground events)
+- Use for footsteps, combat impacts, weather, crowd murmur, wildlife, UI
+- Always check license; CC0 preferred, attribute CC-BY in `docs/ATTRIBUTIONS.md`
+- API: https://freesound.org/docs/api/
+
+### Supporting tools
+- **Aseprite** — manual sprite refinement after RetroDiffusion
+- **LDtk / Tiled** — level data, parse `.ldtk` format directly
+
+---
+
+## MCP SERVERS & AGENT SKILLS
+
+### MCP
+- **Obsidian MCP** — vault read/write (docs, session log, blocked)
+- **Context7** — live documentation fetching for any library API
+- **Unreal MCP Bridge** (ref `github.com/Natfii/UnrealClaude.git`) — for reference materials only; this project does not use Unreal
+- **Chrome DevTools MCP** — perf profiling, Lighthouse audits
+- **Figma MCP** — UI reference ingestion
+- **Supabase MCP** — schema/auth
+
+### Agent skills to prefer
+- `frontend-design` — HUDs, menus, dialogue boxes
+- `agent-architecture` — pre-code review for any new system
+- `worker-benchmarks` — post-build perf check
+- `verification-quality-assurance` — post-build correctness check
+- `superpowers:test-driven-development` — for new pure-logic systems
+- `superpowers:systematic-debugging` — when any bug recurs
+
+**RULE**: always check if a skill/plugin handles a task before writing custom code for it.
+
+---
+
+## ART RULES — HD-2D STANDARD
+
+- **Internal resolution**: 320×180, 3× display scale via Phaser `Scale.FIT` (will be reviewed on camera pivot — may increase to 480×270 for birds-eye depth)
 - **Tile size**: 32×32 game px
-- **Player sprite**: 16×24 game px
-- **Enemy sprite**: 24×32 game px
+- **Player sprite**: 24×32 game px (revised up for birds-eye readability)
+- **Enemy sprite**: 24×32 game px (minibosses/bosses up to 64×96)
 - **`imageSmoothingEnabled = false`** on every canvas — always — non-negotiable
 - **`roundPixels: true`** in Phaser config — always
-- **Background**: 3-4 parallax layers minimum — nothing is flat
-- **Foreground silhouette**: dark shape layer in front of player (65% opacity)
+- **CSS `image-rendering: pixelated`** on the canvas element
+- **Lighting**: multiply-blend layers on top of GAME depth — NEVER flat ambient fill
+- **Depth of field / bokeh**: fake via two blurred layers (far, near) + bloom pass on bright lights
+- **Volumetric fog**: per-region particle drift, tinted by palette
 - **Characters**: dark outlines, bright details — NOT flat color fills
-- **Light**: from sources only — never ambient flat lighting
-- **Shadows**: everything casts one — never black, always region shadow colour
-- **Idle**: nothing static — backgrounds breathe, lights flicker, particles drift
+- **Shadows**: everything casts one — never pure black, always region shadow colour
+- **Idle motion**: nothing static — grass sways, water shimmers, torches flicker, dust drifts, idle breathing on characters
+- **Screen shake, sprite flash, hit-stop** on EVERY impact
 - **Palette**: per-region — see `src/config/paletteConfig.ts`
 - **Accord white** (#F5F0E8): appears in ruins in every region — always feels slightly wrong
+- **Motion blur** + **chromatic aberration** on heavy impacts and specials (post-process shader)
+- **See-through occlusion**: tall terrain (mountains, some trees, upper river banks) fades to 50% alpha when it covers the player. NOT every prop — only ones flagged `occludesPlayer: true`.
+- **Destructible environments** gated by player strength stat — rocks, crates, weak walls, ice sheets
+
+---
+
+## AUDIO RULES — AMBIENT-ONLY
+
+`AudioSystem` exposes three channels:
+
+| Channel | Purpose |
+|---------|---------|
+| `ambientBed` | Constant regional wind/water/cave-hum loop — crossfades on region change |
+| `ambientLayer` | Mid-range environmental events — distant bells, bird calls, distant crowd |
+| `sfx` | Foreground events — footsteps, combat, UI, destruction |
+
+- NO `music` channel. Ever. Deleting any existing music-channel stub is valid cleanup.
+- Every action must have a sound: footstep variants per surface, cloth rustle on interact, breath on heavy attack, item-drop thud, destructible crack→crumble
+- Crossfade duration on region change: 2.0s
+- Volume mixers per channel, persisted to save file
 
 ---
 
@@ -54,17 +208,29 @@ Dark fantasy action RPG — **Hollow Knight** visual standard, **E33** combat ph
 
 | Depth | Layer | Notes |
 |-------|-------|-------|
-| 0 | Sky | gradient background |
-| 10 | BG_FAR | mountains / distant (parallax 0.15) |
-| 20 | BG_MID | trees / buildings (parallax 0.35) |
-| 30 | BG_PROPS | barrels / pillars (parallax 0.65) |
-| 100 | GAME | player, enemies, tiles |
-| 200 | FG_SILHOUETTE | foreground shapes in front of player |
-| 250 | PARTICLES | effects |
-| 300 | LIGHTING | multiply blend over 0-250 |
-| 400 | UI | HUD, dialogue — unaffected by lighting |
-| 500 | CUTSCENE | overlays |
+| 0 | SKY | gradient / distant horizon |
+| 10 | BG_FAR | mountains, distant silhouettes (parallax 0.15) |
+| 20 | BG_MID | trees, buildings (parallax 0.35) |
+| 30 | BG_PROPS | barrels, pillars (parallax 0.65) |
+| 100 | GAME | player, enemies, tile sprites, NPCs |
+| 150 | OCCLUDERS | terrain/props that fade when covering player |
+| 200 | FG_NEAR | foreground diorama pieces between camera and game |
+| 250 | PARTICLES | ambient + combat effects |
+| 300 | LIGHTING | multiply blend over 0–250 |
+| 350 | POSTFX | bloom, DoF, motion blur, chromatic aberration |
+| 400 | UI | HUD, dialogue, journal — unaffected by lighting |
+| 500 | CUTSCENE | Remotion playback overlays |
 | 600 | LETTERBOX | cinematic bars |
+
+---
+
+## CAMERA — BIRDS-EYE DIORAMA
+
+- Angle: Triangle-Strategy-style 3/4 view (z-depth faked via y-sort on GAME layer)
+- Follow: smooth-lerp with deadzone, sub-pixel corrected
+- Region-specific zoom levels set in `paletteConfig.ts`
+- Cinematic camera moves during specials (dolly, pan, brief zoom)
+- No auto-rotation — this is a pixel game
 
 ---
 
@@ -72,13 +238,15 @@ Dark fantasy action RPG — **Hollow Knight** visual standard, **E33** combat ph
 
 | Rule | Value |
 |------|-------|
+| Target FPS | 60 min, 120 if hardware allows |
 | Max particles | 500 — never allocate new inside update |
-| Max lights per screen | 12 (8 in Gildspire interiors) |
+| Max lights per screen | 12 (8 in interiors) |
 | Light math tick | every 3 frames — NOT every frame |
 | Sky redraw | on camera move or weather/region change only |
 | No `new` inside `update()` | ever |
-| No `forEach` inside `update()` | use `for...of` loops |
+| No `forEach` inside `update()` | use `for...of` |
 | Frame budget | 16ms — alert if exceeded |
+| Asset load budget | <3s between regions |
 
 ---
 
@@ -86,8 +254,6 @@ Dark fantasy action RPG — **Hollow Knight** visual standard, **E33** combat ph
 
 | Mechanic | Value |
 |----------|-------|
-| Coyote time | 8 frames |
-| Jump buffer | 6 frames |
 | Parry window | 6 frames total — first 2f = perfect |
 | Dodge window | 10 frames total — first 3f = perfect |
 | I-frames (dodge) | 8 frames |
@@ -97,6 +263,44 @@ Dark fantasy action RPG — **Hollow Knight** visual standard, **E33** combat ph
 | Perfect parry slow-mo | 0.15× speed for 400ms |
 | Kill slow-mo | 0.5× speed for 500ms |
 | AP max | 3 — decays -1/8s out of combat |
+
+**Camera-pivot note**: coyote-time/jump-buffer values are retired — no jumping in birds-eye. Platform sections will define their own values locally.
+
+---
+
+## PLAYER PROGRESSION SYSTEMS
+
+- **Classes / paths**: Warrior, Mage, Rogue, Hybrid — unlock weapon families, specials, movement abilities
+- **Weapons**: 30 equipment pieces minimum across sword, bow, staff, dagger, hammer, focus
+- **Pictos**: 25 equippable modifiers
+- **Currency**: `lumens` — earned from enemies, quests, destructibles. Merchant economy. No real-money integration, ever.
+- **Character customization**: outfits (modest), hair, face, colours. Cosmetic-only, no stat locks behind appearance.
+- **Home base**: furnishable hub building, upgrades via quests and materials
+- **Pets**: bondable, combat support, **flying unlock late game** enables aerial traversal of mapped regions
+- **Farming**: material nodes respawn on long rest; crafting + cooking from harvest
+- **Veils & Barriers**: narrative-gated walls (lore-unlocked, quest-unlocked, strength-gated) that create intrigue about later content
+- **Fast travel**: void-cut portals — per-class visual effect (warrior cuts reality, mage opens rift, rogue slips shadow)
+- **Quest journal**: persistent UI section tracking chosen paths, completed quests, lore fragments, and major choices so the player never forgets what they've done
+
+---
+
+## INPUT
+
+- Keyboard + mouse
+- Bluetooth/wired controller (Gamepad API via Phaser)
+- All bindings rebindable, persisted per save
+- Rumble support on controllers that advertise it
+- Input source auto-detected; HUD prompts switch glyphs on the fly
+
+---
+
+## SAVE SYSTEM
+
+- **Autosave**: on region enter, boss kill, bonfire rest, quest step complete
+- **Manual save points**: bonfires
+- **Save presets**: up to 5 per user, labelled, quick-load from title screen
+- **Save settings**: audio mixers, input bindings, graphics, accessibility — persisted to Supabase
+- **Offline fallback**: local save mirrors remote; merge on reconnect
 
 ---
 
@@ -114,7 +318,7 @@ import { Bus, GameEvent } from './EventBus';
 Bus.emit(GameEvent.HIT_LIGHT, { target, damage });
 ```
 
-All events are typed as `const enum GameEvent` in EventBus.ts.
+All events typed as `const enum GameEvent` in `EventBus.ts`.
 
 ---
 
@@ -126,7 +330,10 @@ All code must use these — no string literals or magic numbers:
 - `GameEvent` — all event bus events (`src/systems/EventBus.ts`)
 - `FactionId` — all faction names (`src/config/enemyConfig.ts`)
 - `WeatherType`, `Season`, `TimeOfDay` — world state (`src/config/worldConfig.ts`)
-- `ElevationLevel` — 0-4 (`src/config/worldConfig.ts`)
+- `ElevationLevel` — 0–4 (`src/config/worldConfig.ts`)
+- `CharacterClass`, `WeaponFamily`, `CurrencyType` — new, to be added in camera-pivot phase
+
+**NEVER use `any`.**
 
 ---
 
@@ -135,7 +342,7 @@ All code must use these — no string literals or magic numbers:
 See full lore: `src/story/lore/CoreNarrative.ts`
 
 **World**: VELANTHAS — held for 400 years by THE ACCORD. When it broke: silence.
-**Truth** (never stated by NPCs, pieced from environment):
+**Truth** (never stated by NPCs — pieced from environment):
   - The Accord was released by EDRIC VAEL to save THESSAMINE (player's mother)
   - She died anyway. The Accord broke for nothing.
   - Player is their child. Doesn't know yet.
@@ -149,90 +356,80 @@ See full lore: `src/story/lore/CoreNarrative.ts`
 
 ---
 
-## STUDY RPG MECHANICS (ORIGINAL SCOPE)
+## BUILD STATUS — SYSTEMS PHASE COMPLETE
 
-**World**: Lumenveil — knowledge = power. Damage in billions (E33 scaling).
-**Question System**: Claude AI + Open Trivia DB + fallback banks
-**Hub Town**: Umbral Crossing | **Mentor**: Magistra Eon
+All foundational systems shipped. Code is camera-agnostic except the scene layer, which is currently side-scroller and needs pivoting.
 
-Damage formula:
 ```
-damage = baseAtk × 1.9^(level-1) × (1 + timerPct×3) × comboMult × breakMult × buffMult × critMult
+[DONE] EventBus, visualConfig, narrativeConfig, paletteConfig, worldConfig
+[DONE] enemyConfig, factionConfig, difficultyConfig
+[DONE] AP/Parry/Dodge/Combat/Juice/Faction/Boss/Dialogue/Cutscene/Weather
+[DONE] Season/Elevation/Reflection/Lighting/Sight/Sky/Cinematic/SpecialAttack
+[DONE] Story lore / CoreNarrative
+[DONE] 31 enemy entity files (ironveil/6, thewild/5, voidborn/4, gilded/4,
+       forgotten/4, silentones/3, neutral/3, minibosses/2) + GuardEnemy
+[DONE] DialogueSystem wired to NPC, Magistra Eon starter tree
+[DONE] Supabase schema + SaveSystem wiring
+[DONE] Vercel auto-deploy
+[WIP]  TownScene bonfire + NPC + weather + save init (uncommitted)
 ```
 
 ---
 
-## CURRENT BUILD ORDER
+## NEXT BUILD PHASE — CAMERA PIVOT + CONTENT ENGINE
 
-Build one item at a time. Benchmarks + feel test before moving to next.
+Build in this order, one item at a time, each passing TS + feel test before the next.
 
 ```
-[DONE] EventBus.ts                    — all cross-system communication
-[DONE] src/config/visualConfig.ts     — renderer layer order, perf caps
-[DONE] src/config/narrativeConfig.ts  — world lexicon, endings, fragments
-[DONE] src/config/paletteConfig.ts    — all region palettes
-[DONE] src/config/worldConfig.ts      — day/night, seasons, weather, elevation
-[DONE] src/config/enemyConfig.ts      — all enemy stats, phase thresholds
-[DONE] src/config/factionConfig.ts    — rep costs, faction effects
-[DONE] src/config/difficultyConfig.ts — hint/skip thresholds, death tracker
-[DONE] src/systems/APSystem.ts
-[DONE] src/systems/ParrySystem.ts
-[DONE] src/systems/DodgeSystem.ts
-[DONE] src/systems/CombatSystem.ts
-[DONE] src/systems/JuiceSystem.ts
-[DONE] src/systems/FactionSystem.ts
-[DONE] src/systems/BossSystem.ts
-[DONE] src/systems/DialogueSystem.ts
-[DONE] src/systems/CutsceneSystem.ts
-[DONE] src/systems/WeatherSystem.ts
-[DONE] src/systems/SeasonSystem.ts
-[DONE] src/systems/ElevationSystem.ts
-[DONE] src/systems/ReflectionSystem.ts
-[DONE] src/systems/LightingSystem.ts
-[DONE] src/systems/SightSystem.ts
-[DONE] src/systems/SkySystem.ts
-[DONE] src/systems/CinematicSystem.ts
-[DONE] src/systems/SpecialAttackSystem.ts
-[DONE] src/story/lore/CoreNarrative.ts
-[DONE] src/entities/enemies/GuardEnemy.ts
+[NEXT] 00. Commit WIP (bonfire/NPC/weather/save init) as feat(town):
+[ ]    01. BaseWorldScene abstract class — birds-eye camera, y-sort, deadzone follow
+[ ]    02. Retire side-scroller assumptions — GROUND_Y, gravity, parallax stack
+[ ]           → move to ElevationSystem 3/4-view projection
+[ ]    03. AudioSystem refactor — 3 channels (ambientBed/Layer/sfx), NO music
+[ ]    04. InputSystem — keyboard + Gamepad API, rebindable, persisted
+[ ]    05. OccluderSystem — tall props/terrain fade when covering player
+[ ]    06. PostFXSystem — bloom, DoF, motion blur, chromatic aberration
+[ ]    07. Ashfields region scene (first real map, LDtk) — 6 enemies, 1 bonfire,
+[ ]         1 NPC with quest, ambient soundscape, 3 destructibles, 1 secret
+[ ]    08. CurrencySystem + merchant NPC + loot tables
+[ ]    09. JournalSystem — quest + lore + choices tracking UI
+[ ]    10. CustomizationSystem — outfit/hair swap, save-backed
+[ ]    11. FastTravelSystem — void-cut portals, per-class effects
+[ ]    12. FarmingSystem — harvest nodes, respawn timer, crafting table stub
+[ ]    13. Remotion cinematic pipeline — first cutscene (Prologue) rendered end-to-end
+[ ]    14. ElevenLabs voice pipeline — Magistra Eon lines rendered, hooked to DialogueSystem
+[ ]    15. RetroDiffusion sprite pipeline — first batch (Ashfields tileset), Aseprite pass
+[ ]    16. Second region: Verdenmere, copying Ashfields pattern
+```
 
-[DONE] 01. LightingSystem — integrated into TownScene (shadow casters, SURFACE darkness, player pos sync)
-[DONE] 02. SkySystem — wired to TownScene, ASHFIELDS region on start
-[DONE] 03. SkySystem — Verdenmere/Greyveil/Gildspire/Voidmarsh/Unnamed City playtest
-[DONE] 06. SightSystem — wired to GuardEnemy (CONE_SIGHT 100°, yellow→red escalation)
-[DONE] 07. SpecialAttack — JUDGMENT_MARK + THE_RECKONING end-to-end (U/I keys → SpecialAttackSystem → Bus HIT_SPECIAL → enemy routed via sprite map)
-[DONE] 08. SpecialAttack — remaining 5 specials selectable via input (U/O/P/Q/I/E/R = all 7)
-[DONE] 09. Enemy roster — all 31 files, 0 TS errors (ironveil/6, thewild/5, voidborn/4, gilded/4, forgotten/4, silentones/3, neutral/3, minibosses/2)
-[DONE] 10. DialogueSystem — wired to NPC entity, Magistra Eon starter tree, advance() + Bus events
-[DONE] 11. Supabase — schema migration (20260407_initial_schema.sql), SaveSystem wired to queries.ts + Bus events (BONFIRE_REST/BOSS_KILLED/REGION_ENTER auto-save)
-[DONE] 12. Vercel deploy
-
-AFTER EACH ITEM:
-  → TypeScript check (tsc --noEmit)
+After each item:
+  → `tsc --noEmit`
   → Code Review skill
-  → benchmarks check (perf rules above)
-  → emilkowalski visual audit (any UI change)
-  → commit: feat/fix/feel/art/perf(system): description
-```
+  → Benchmarks check (perf rules above)
+  → `frontend-design` agent audit on any UI change
+  → Commit: `feat/fix/feel/art/perf(system): description`
 
 ---
 
-## ENEMY ROSTER — STILL TO BUILD
+## ENEMY ROSTER — REMAINING TO BUILD (target 40)
 
-Faction entity files to create in `src/entities/enemies/`:
-
+Already built (31):
 ```
-ironveil/     IronveilFootsoldier.ts, IronveilArcher.ts, IronveilShieldwall.ts
-              IronveilBerserker.ts, IronveilInquisitor.ts, IronveilWarbeast.ts
-thewild/      MossWalker.ts, SporeWitch.ts, BriarHound.ts, SongbirdArcher.ts
-              TheOldGrove.ts (mini-boss)
-voidborn/     VoidShard.ts, EchoSelf.ts, VoidMother.ts, NullKnight.ts
-gilded/       GildedMerchant.ts, GildedEnforcer.ts, GildedSniper.ts, GildedGolem.ts
-forgotten/    ForsakenSoldier.ts, WailingWraith.ts, BoneColossus.ts, Revenant.ts
-silentones/   SilentWatcher.ts, SilentChaser.ts, SilentMirror.ts
-neutral/      MirrorKnight.ts, BrambleEnemy.ts, WraithEnemy.ts
-minibosses/   ThornQueenMini.ts, TheSleepwalker.ts
-bosses/       GrimdarTheForsaken.ts, LumaMoth.ts, TheWarden.ts, SisterSilence.ts
+ironveil/     IronveilFootsoldier, IronveilArcher, IronveilShieldwall,
+              IronveilBerserker, IronveilInquisitor, IronveilWarbeast
+thewild/      MossWalker, SporeWitch, BriarHound, SongbirdArcher, TheOldGrove
+voidborn/     VoidShard, EchoSelf, VoidMother, NullKnight
+gilded/       GildedMerchant, GildedEnforcer, GildedSniper, GildedGolem
+forgotten/    ForsakenSoldier, WailingWraith, BoneColossus, Revenant
+silentones/   SilentWatcher, SilentChaser, SilentMirror
+neutral/      MirrorKnight, BrambleEnemy, WraithEnemy
+minibosses/   ThornQueenMini, TheSleepwalker
+```
+
+Still to build (9 to hit 40 + the 4 main bosses):
+```
+bosses/       GrimdarTheForsaken, LumaMoth, TheWarden, SisterSilence
+ambient/      5 non-combat wildlife / herd creatures for region liveliness
 ```
 
 ---
@@ -240,60 +437,50 @@ bosses/       GrimdarTheForsaken.ts, LumaMoth.ts, TheWarden.ts, SisterSilence.ts
 ## SUPABASE SCHEMA (EXTENDED)
 
 ```sql
--- player_saves
 create table player_saves (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users,
-  region text,
-  position_x float, position_y float,
+  region text, position_x float, position_y float,
   hp int, max_hp int, ap int,
-  attributes jsonb,
-  pictos text[],
-  equipment jsonb,
+  class text, attributes jsonb,
+  pictos text[], equipment jsonb,
+  currency bigint default 0,
+  outfit jsonb, hair jsonb,
+  settings jsonb,
   updated_at timestamptz default now()
 );
 
--- quest_states
 create table quest_states (
   id uuid primary key default gen_random_uuid(),
   player_id uuid references player_saves,
-  quest_id text,
-  stage int,
-  choices_made jsonb
+  quest_id text, stage int, choices_made jsonb
 );
 
--- faction_rep
 create table faction_rep (
   id uuid primary key default gen_random_uuid(),
   player_id uuid references player_saves,
-  faction_id text,
-  rep_value int
+  faction_id text, rep_value int
 );
 
--- boss_deaths
 create table boss_deaths (
   id uuid primary key default gen_random_uuid(),
   player_id uuid references player_saves,
-  boss_id text,
-  death_count int default 0
+  boss_id text, death_count int default 0
 );
 
--- leaderboard
 create table leaderboard (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users,
   player_name text,
-  total_damage bigint,
-  max_combo int,
-  boss_kills int,
-  time_played_s int,
+  total_damage bigint, max_combo int,
+  boss_kills int, time_played_s int,
   created_at timestamptz default now()
 );
 ```
 
 **RLS**: players read/write own data only. Leaderboard: read-all, write-own.
-**Save triggers**: bonfire rest, boss kill, region transition.
-**Realtime**: leaderboard table only.
+**Save triggers**: bonfire, boss kill, region transition, quest step.
+**Realtime**: leaderboard only.
 
 ---
 
@@ -302,18 +489,20 @@ create table leaderboard (
 ```
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
-VITE_CLAUDE_API_KEY=
-VITE_OTDB_BASE_URL=https://opentdb.com/api.php
+VITE_ELEVENLABS_API_KEY=
+VITE_FREESOUND_API_KEY=
+VITE_RETRODIFFUSION_API_KEY=
 ```
+
+Note: `VITE_CLAUDE_API_KEY` and `VITE_OTDB_BASE_URL` are retired with the trivia system.
 
 ---
 
-## SKILL/AGENT WORKFLOW
+## SKILL / AGENT WORKFLOW
 
-Every build step:
 ```
 1. PRE-CODE    → agent-architecture (any new system)
-2. PRE-UI      → emil-design-eng (any UI/animation)
+2. PRE-UI      → frontend-design  (any HUD/menu/dialogue)
 3. BUILD       → write code
 4. POST-BUILD  → worker-benchmarks + verification-quality-assurance
 5. POST-SESSION→ agent-adaptive-coordinator
@@ -323,32 +512,44 @@ Never begin item N+1 before item N passes feel test.
 
 ---
 
-## SESSION START CHECKLIST
+## SESSION RULES
 
-Every session, in order:
-1. Read CLAUDE.md
-2. Scan codebase: what changed since last session
-3. Check current build order item — confirm still correct
-4. Report status before touching any file
+### Session Start
+1. Read `CLAUDE.md`
+2. Read `docs/blocked.md` if it exists
+3. Read last entry in `docs/sessions/session-log.md`
+4. Scan codebase for uncommitted changes
+5. **Tool inventory check**: list available MCP servers + installed skills + AI tools so the session has them top-of-mind
+6. Report what's next in build queue
+7. Start building — don't wait for confirmation
 
-## SESSION END CHECKLIST
+### Before writing any code (every time)
+Run the 4-step "Does a tool already do this?" check from the AI TOOLS section. If yes → use the tool. If no → write the minimum code.
 
-1. Update CLAUDE.md build order (check off completed items)
-2. Commit all changes (correct convention)
-3. Confirm no TypeScript errors
-4. Note any new blockers or reprioritizations
+### Session End
+1. Update `CLAUDE.md` build queue (check off completed items)
+2. Create/update doc file for every system touched
+3. Run `scripts\obsidian-sync.bat`
+4. `git add -A`
+5. `git commit -m "session: [what was built]"`
+6. `git push` if remote configured
+7. Append summary to `docs/sessions/session-log.md`
+8. Append blockers to `docs/blocked.md`
+9. Final vault sync
+10. Report: what was built, what's next, anything blocked
 
 ---
 
 ## COMMIT CONVENTION
 
 ```
-feat(lighting): radial light sources with multiply blend
-feat(sky): Ashfields procedural ash cloud generation
+feat(lighting):  radial light sources with multiply blend
+feat(sky):       Ashfields procedural ash cloud generation
 perf(particles): pool capped at 500, eliminated loop allocation
-fix(specials): RECKONING white frame held correct duration
-feel(juice): VOID CRUCIBLE screen shake tuned to 5px
-art(sky): Verdenmere bioluminescent spore particles
+fix(specials):   RECKONING white frame held correct duration
+feel(juice):     VOID CRUCIBLE screen shake tuned to 5px
+art(sky):        Verdenmere bioluminescent spore particles
+audio(ambient):  Ashfields wind bed + distant bell layer
 refactor(systems): all cross-system calls moved to EventBus
 ```
 
@@ -365,41 +566,29 @@ refactor(systems): all cross-system calls moved to EventBus
 - Any confirmation of any kind
 
 ### When Blocked
-- Write issue to `docs/blocked.md` with timestamp
-- Write attempted solution to `docs/blocked.md`
+- Write issue + attempted solution to `docs/blocked.md` with timestamp
 - Try 2 alternative approaches automatically
-- Continue with everything else
-- NEVER stop and wait
+- Continue with everything else — NEVER stop and wait
 
 ### When A Command Fails
 - Log failure to `docs/blocked.md`
 - Try 3 alternative approaches
 - Continue with next task
-- NEVER stop and wait
 
 ### Session Behavior
 - Start every session: read CLAUDE.md + scan codebase
-- End every session: run obsidian sync + git commit + session log
+- End every session: obsidian sync + git commit + session log
 - Mid session: commit after every completed system
 - Overnight: work through full build queue until empty
 
-### Obsidian Sync Rules
-- Vault: `C:\Users\nawfi\OneDrive\Documents\My remote vault`
-- Sync after every completed system
-- Sync after every CLAUDE.md update
-- Sync after every commit
-- Sync at session end always
-- Only `.md` files — never code or assets
-- Snapshots: keep last 5 only
-
 ### Git Rules
-- Commit after every system: feat/fix/perf convention
-- Never commit broken code (tsc --noEmit must pass)
-- Push after every 3 commits if remote is configured
+- Commit after every system
+- Never commit broken code (`tsc --noEmit` must pass)
+- Push after every 3 commits if remote configured
 
 ---
 
-## AUTO SCRIPTS — RUN THESE AUTOMATICALLY
+## AUTO SCRIPTS
 
 | Trigger | Script |
 |---------|--------|
@@ -408,19 +597,16 @@ refactor(systems): all cross-system calls moved to EventBus
 | After any system | `scripts\obsidian-sync.bat` |
 | Before sleep | `scripts\overnight.ps1` (via Desktop shortcut) |
 | On wake | `scripts\wake-up-report.ps1` (via Desktop shortcut) |
+| Free mode | `scripts\free-mode.bat` |
+| Paid mode | `scripts\paid-mode.bat` |
 
-## What Nawfi Has To Do
-- Before sleep: double-click **SLEEP - Claude Overnight** (Desktop)
-- On wake: double-click **WAKE - Morning Report** (Desktop)
+### What Nawfi Has To Do
+- Before sleep: double-click **SLEEP — Claude Overnight** (Desktop)
+- On wake: double-click **WAKE — Morning Report** (Desktop)
 - Everything else: Claude Code handles automatically
 
-## What Nawfi Never Has To Do
-- Confirm anything
-- Approve anything
-- Run any sync manually
-- Commit manually
-- Update Obsidian manually
-- Check logs manually (morning report does it)
+### What Nawfi Never Has To Do
+- Confirm anything, approve anything, run syncs manually, commit manually, update Obsidian manually, check logs manually
 
 ---
 
@@ -434,8 +620,8 @@ Limit: **10 GB total**. Warn at 8 GB, halt at 9 GB.
 
 Rules:
 - ONLY sync: `CLAUDE.md`, `docs/**/*.md`, `snapshots/**/*.md`
-- NEVER sync: code files, assets, images, audio, `.env`, node_modules
-- Snapshots: CLAUDE.md only — keep last 5, delete older automatically
+- NEVER sync: code files, assets, images, audio, `.env`, `node_modules`
+- Snapshots: `CLAUDE.md` only — keep last 5, delete older automatically
 - Session log: `Game\docs\sessions\session-log.md` — append only
 - Run sync script after every session
 
@@ -443,16 +629,25 @@ Rules:
 
 ## NEVER
 
-- Write code without first checking if it conflicts with existing systems
+- Write code without checking conflicts with existing systems
 - Import directly between systems (EventBus only)
 - Use `any` in TypeScript
 - Put a number in a game file that belongs in config
 - Allocate objects inside `update()` loops
 - Let `imageSmoothingEnabled` be anything but `false`
 - Skip the build order without explicit user approval
-- Build a UI component without emilkowalski agent review first
-- Deploy without a playtest confirming the feel is correct
+- Build a UI component without `frontend-design` agent review first
+- Deploy without a playtest confirming the feel
+- Add music. Ever. No exceptions.
+- Add revealing clothing, romance, or other content that conflicts with Islamic values
+- Manually build what an AI tool (ElevenLabs / Remotion / RetroDiffusion / FreeSound) already handles
+- Hand-draw a sprite when RetroDiffusion can generate a draft
+- Write a cinematic as Phaser tweens when Remotion can render it as video
+- Ship placeholder voice-line text when ElevenLabs can synthesise the real line
+- Write custom audio playback code when Howler.js is already a dependency
+- Skip an MCP server / installed skill check before writing a system from scratch
+- Guess at a library's current API when Context7 MCP can fetch the live docs
 
 ---
 
-*Last updated: 2026-04-07 | Build queue complete — all 12 items done*
+*Last updated: 2026-04-09 | Pivoted to HD-2D birds-eye, dropped trivia mechanics, added AI-tool pipeline + content targets + halal content rules.*

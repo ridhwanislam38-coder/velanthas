@@ -32,7 +32,7 @@ export default class TitleScene extends Phaser.Scene {
     mtn.fillTriangle(610, H, 810, 350, W, H);
 
     // Title
-    const title = this.add.text(W / 2, H * 0.28, 'STUDY QUEST', {
+    const title = this.add.text(W / 2, H * 0.28, 'VELANTHAS', {
       fontFamily: "'Press Start 2P'",
       fontSize: '36px',
       color: '#e94560',
@@ -41,7 +41,7 @@ export default class TitleScene extends Phaser.Scene {
       shadow: { offsetX: 4, offsetY: 4, color: '#6b0020', fill: true },
     }).setOrigin(0.5).setAlpha(0);
 
-    const sub = this.add.text(W / 2, H * 0.39, 'THE MEMORIA COLLAPSE', {
+    const sub = this.add.text(W / 2, H * 0.39, "THE ACCORD'S SILENCE", {
       fontFamily: "'Press Start 2P'",
       fontSize: '13px',
       color: '#4cc9f0',
@@ -63,7 +63,7 @@ export default class TitleScene extends Phaser.Scene {
     // Tagline
     const lore = this.add.text(
       W / 2, H * 0.79,
-      '"WHERE KNOWLEDGE IS POWER —\nAND FORGETTING IS DEATH"',
+      '"FOUR HUNDRED YEARS OF ACCORD —\nAND THEN, SILENCE"',
       { fontFamily: "'Press Start 2P'", fontSize: '7px', color: '#6b6b8a', align: 'center' },
     ).setOrigin(0.5).setAlpha(0);
 
