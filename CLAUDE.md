@@ -81,58 +81,108 @@ Nawfi is Muslim. The game must respect these rules everywhere:
 
 ---
 
-## AI TOOLS — MANDATORY USE
+## AI TOOLS ARSENAL — FULL PIPELINE
 
-These tools exist to accelerate solo development. **DO NOT manually build what they handle.** You are a solo-dev operation — these tools ARE your team. Every session should leverage them to move faster, not slower.
+**NEVER manually create what these tools generate. NEVER freestyle art — everything through trained style models. NEVER skip tools because "it's faster to code it." ALWAYS batch-generate via APIs. ALWAYS refine AI output in Aseprite before shipping.**
 
 ### The Rule (non-negotiable)
 
-Before writing ANY code, ask in this exact order:
-1. Does an **MCP server** already do this? (Obsidian, Context7, Chrome DevTools, Supabase, Figma, Playwright, Sentry, etc.)
-2. Does an **installed agent skill** already do this? (`frontend-design`, `agent-architecture`, `worker-benchmarks`, `superpowers:*`, etc.)
-3. Does one of the four **content-generation AI tools** already do this? (ElevenLabs / Remotion / RetroDiffusion / FreeSound)
-4. Does an **installed library** already do this? (Howler for audio, Phaser for rendering, Zod for validation, LDtk for levels)
+Before writing ANY code or creating ANY asset, ask in this exact order:
+1. Does an **MCP server** already do this?
+2. Does an **installed agent skill** already do this?
+3. Does one of the **AI art/audio tools** below already do this?
+4. Does an **installed library** already do this?
 
-**If the answer to 1–4 is "yes" — use the tool. Do not write custom code.**
+If yes → use the tool. Do not write custom code. Do not hand-draw. Do not freestyle.
 
-### Forbidden shortcuts
+---
 
-- ❌ Hand-drawing sprites → use RetroDiffusion, then Aseprite refine
-- ❌ Writing cinematics as Phaser tween sequences → use Remotion React components → rendered MP4
-- ❌ Placeholder text for voice lines → use ElevenLabs TTS, commit the generated .wav/.mp3
-- ❌ Custom audio scheduler / mixer / crossfade code → use Howler.js (already installed)
-- ❌ Skipping a cinematic because "it's complex" → Remotion handles complexity declaratively, build it
-- ❌ Manually authoring tilemaps in code → use LDtk, parse the `.ldtk` JSON
-- ❌ Guessing at library APIs → call Context7 MCP to fetch current docs
-- ❌ Manually profiling with console.time → use Chrome DevTools MCP Lighthouse audit
-- ❌ Writing a review checklist inline → invoke the `frontend-design` or `agent-architecture` skill
-- ❌ Asking the user to decide between approaches without first checking if `superpowers:brainstorm` or `agent-architecture` would resolve it
+### SPRITE & ART GENERATION
 
+| Tool | Purpose | API? | Output |
+|------|---------|------|--------|
+| **RetroDiffusion** (retrodiffusion.ai) | Pixel art tiles, items, UI, environments. Grid-aligned, style-consistent. | Yes | `assets/tiles/`, `assets/sprites/` |
+| **PixelLab** (pixellab.ai) | Animated sprite sheets, skeleton animation, 4/8-dir rotation, tileset gen, inpainting | Yes + Python SDK (`pip install pixellab`) | `assets/sprites/characters/`, `assets/sprites/enemies/` |
+| **God Mode AI** (godmodeai.co) | 8-dir isometric sprites, VFX (fire, slash trails, spells), pixel art conversion, 2D Spine, game UI gen | Web (250 free/month) | `assets/vfx/`, `assets/sprites/ui/` |
+| **Scenario** (scenario.com) | STYLE CONSISTENCY — train custom Style Model on Triangle Strategy art. ALL generation through this model. Has RetroDiffusion Plus built in. | Yes | Trained model ID for all other tools |
+| **Leonardo AI** | 150 free daily gens. Concept art, mood boards, reference for Scenario training. | Yes | `assets/concept-art/`, `assets/reference/` |
+| **Stable Diffusion** | Local unlimited generation for bulk concepting. | Local | `assets/concept-art/` |
+| **Aseprite** | FINAL REFINEMENT on every AI-generated sprite. Industry standard. | Local | All sprite folders |
 
-### ElevenLabs (Voice & SFX generation)
-- Purpose: voice acting for cinematics, NPC dialogue, narrator
-- Text-to-Speech API → distinct voice per character
-- Also: SFX generation via their SFX model
-- Docs: https://elevenlabs.io/docs
+**Modesty constraint must be in EVERY art generation prompt.**
 
-### Remotion (Cinematics)
-- Purpose: programmatic video generation for all 15 cutscenes
-- Source: `src/cinematics/` (React components)
-- Output: `assets/cinematics/*.mp4`
-- Docs: https://www.remotion.dev/docs
+### THE ART PIPELINE
 
-### RetroDiffusion (Pixel art generation)
-- Purpose: AI-generated sprites, tilesets, portraits, environment tiles
-- Workflow: batch-generate → Aseprite hand-refine → commit
-- Output: `assets/sprites/` organised by category
-- Docs: https://retrodiffusion.ai
-- **Modesty constraint must be in every prompt.**
+```
+1. Lock art style → train Scenario Style Model on Triangle Strategy references
+2. Generate sprites through Scenario style → animate with PixelLab → VFX with God Mode → refine in Aseprite
+3. Generate tiles with RetroDiffusion RD Tile → refine in Aseprite
+4. All output → assets/ folder structure
+```
 
-### FreeSound (Ambient + SFX library)
-- **CRITICAL**: no music means ambient sound carries 100% of atmosphere
-- Per-region: build layered ambient soundscapes (wind bed + distance layer + foreground events)
-- Use for footsteps, combat impacts, weather, crowd murmur, wildlife, UI
-- Always check license; CC0 preferred, attribute CC-BY in `docs/ATTRIBUTIONS.md`
+---
+
+### AUDIO (ZERO MUSIC — ambient soundscapes only)
+
+| Tool | Purpose | API? | Output |
+|------|---------|------|--------|
+| **ElevenLabs** (elevenlabs.io) | Voice acting, narrator, NPC dialogue, SFX generation | Yes (Python SDK installed) | `assets/audio/voice/` |
+| **FreeSound** (freesound.org) | Ambient layers (wind, water, crowds, fire, rain, wildlife), combat impacts, footsteps, UI | Yes (Python SDK installed) | `assets/audio/ambient/`, `assets/audio/sfx/` |
+| **SFXR/Bfxr** | Retro SFX for UI pickups, menu sounds. Free, instant, local. | Local | `assets/audio/sfx/` |
+| **AudioCraft** (Meta, open source) | Custom ambient audio generation. Run locally, unlimited. | Local/Python | `assets/audio/ambient/` |
+
+---
+
+### CINEMATICS
+
+| Tool | Purpose | Output |
+|------|---------|--------|
+| **Remotion** (remotion.dev) | All 15+ cinematics as React components → rendered video | `assets/cinematics/rendered/` |
+| Source in `src/cinematics/`, uses ElevenLabs audio + PixelLab/RetroDiffusion art |
+
+---
+
+### LEVEL DESIGN & GAMEPLAY
+
+| Tool | Purpose |
+|------|---------|
+| **LDtk / Tiled** | All map data in `.ldtk` format. Never hardcode levels. |
+| **Inworld AI** | Dynamic NPC dialogue with persistent memory and personality. Free dev tier. |
+| **Ludo.ai** | Game concept validation and competitor research. |
+
+---
+
+### INSTALLED SDKs
+
+```
+Python: elevenlabs, pixellab, freesound-python
+npm: howler, remotion, @remotion/cli, @remotion/renderer
+Config: config/ai-tools.json (API keys — gitignored)
+```
+
+### API Keys Status
+
+| Tool | Status |
+|------|--------|
+| ElevenLabs | ✅ Key set |
+| FreeSound | ✅ Key set |
+| RetroDiffusion | ❌ Needs key (paid) |
+| PixelLab | ❌ Needs key |
+| Scenario | ❌ Needs key |
+| God Mode AI | ✅ Free web (250/month) |
+| Leonardo AI | ✅ Free tier (150/day) |
+
+### Asset Folder Structure
+
+```
+assets/
+  sprites/characters/  sprites/enemies/  sprites/npcs/  sprites/items/  sprites/ui/
+  tiles/environments/  tiles/tilesets/
+  audio/voice/  audio/sfx/  audio/ambient/
+  vfx/
+  cinematics/source/  cinematics/rendered/
+  concept-art/  reference/
+```
 - API: https://freesound.org/docs/api/
 
 ### Supporting tools
